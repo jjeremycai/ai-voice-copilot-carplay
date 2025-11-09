@@ -35,8 +35,16 @@ class MockCXProvider: NSObject, CXProviderProtocol {
         // Mock implementation
     }
     
+    // Real CXProvider instance for delegate callbacks
+    // We use a real CXProvider because the delegate methods require CXProvider, not a protocol
+    // This is safe because we're only testing delegate callbacks, not making actual calls
+    private lazy var realProvider: CXProvider = {
+        return CXProvider(configuration: configuration)
+    }()
+    
     // Simulate provider delegate callbacks
-    func simulateStartCallAction(_ action: CXStartCallAction) {
+    // Uses a real CXProvider instance to avoid casting issues
+    func simulateStartCallAction(_ action: CXStartCallAction, onCallManager: CallManager) {
         if shouldSucceed {
             // Configure audio session
             do {
@@ -48,14 +56,13 @@ class MockCXProvider: NSObject, CXProviderProtocol {
             }
             
             action.fulfill()
-            // Call the delegate method directly
-            if let delegate = delegate {
-                delegate.provider?(self as! CXProvider, perform: action)
-            }
+            // Use real CXProvider instance to call delegate method
+            // This avoids force-casting and works because CXProvider can be created without entitlements
+            onCallManager.provider(realProvider, perform: action)
         }
     }
     
-    func simulateEndCallAction(_ action: CXEndCallAction) {
+    func simulateEndCallAction(_ action: CXEndCallAction, onCallManager: CallManager) {
         if shouldSucceed {
             // Deactivate audio session
             do {
@@ -66,10 +73,8 @@ class MockCXProvider: NSObject, CXProviderProtocol {
             }
             
             action.fulfill()
-            // Call the delegate method directly
-            if let delegate = delegate {
-                delegate.provider?(self as! CXProvider, perform: action)
-            }
+            // Use real CXProvider instance to call delegate method
+            onCallManager.provider(realProvider, perform: action)
         }
     }
 }

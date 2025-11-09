@@ -105,8 +105,7 @@ class SessionLogger {
         
         let (data, response) = try await urlSession.data(for: request)
         
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createDecoder()
         let _: EmptyResponse = try handleResponse(data: data, response: response, decoder: decoder)
     }
     
@@ -160,8 +159,7 @@ class SessionLogger {
         
         let (data, response) = try await urlSession.data(for: request)
         
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createDecoder()
         
         // Parse the actual response structure from backend
         struct SessionDetailResponse: Codable {
@@ -182,8 +180,7 @@ class SessionLogger {
         
         let (data, response) = try await urlSession.data(for: request)
         
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createDecoder()
         let _: EmptyResponse = try handleResponse(data: data, response: response, decoder: decoder)
     }
     
@@ -196,8 +193,7 @@ class SessionLogger {
         
         let (data, response) = try await urlSession.data(for: request)
         
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = createDecoder()
         let _: EmptyResponse = try handleResponse(data: data, response: response, decoder: decoder)
     }
 }

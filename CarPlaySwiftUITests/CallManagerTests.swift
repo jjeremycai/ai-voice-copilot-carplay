@@ -29,16 +29,17 @@ final class CallManagerTests: XCTestCase {
         
         // Set up mock to trigger delegate callbacks
         mockCallController.onRequest = { [weak self] transaction, completion in
+            guard let self = self else { return }
             completion(nil) // Success
             
             // Simulate provider delegate callback
             if let startAction = transaction.actions.first as? CXStartCallAction {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self?.mockProvider.simulateStartCallAction(startAction)
+                    self.mockProvider.simulateStartCallAction(startAction, onCallManager: self.callManager)
                 }
             } else if let endAction = transaction.actions.first as? CXEndCallAction {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self?.mockProvider.simulateEndCallAction(endAction)
+                    self.mockProvider.simulateEndCallAction(endAction, onCallManager: self.callManager)
                 }
             }
         }
