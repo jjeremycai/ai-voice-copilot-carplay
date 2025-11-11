@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
-            instructions="You are a helpful voice AI assistant for CarPlay. Keep responses concise and clear for safe driving. Answer questions directly and briefly."
+            instructions="You are a helpful voice AI assistant for CarPlay. Keep responses concise, clear, and in English for safe driving. Default to English unless the driver explicitly asks for another language."
         )
 
 async def entrypoint(ctx: agents.JobContext):
@@ -55,7 +55,7 @@ async def entrypoint(ctx: agents.JobContext):
             )
 
             await session.generate_reply(
-                instructions="Greet the user briefly and ask how you can help them."
+                instructions="Greet the driver briefly in English and ask how you can help them."
             )
 
             logger.info("✅ Realtime agent session started successfully")
@@ -80,7 +80,7 @@ async def entrypoint(ctx: agents.JobContext):
             )
 
             await session.generate_reply(
-                instructions="Greet the user briefly and ask how you can help them."
+                instructions="Greet the driver briefly in English and ask how you can help them."
             )
 
             logger.info("✅ Agent session started (realtime fallback)")

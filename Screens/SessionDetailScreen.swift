@@ -36,6 +36,10 @@ struct SessionDetailScreen: View {
                     }
                     .padding()
                 } else {
+                    if let session = session {
+                        SessionMetadataSection(session: session)
+                    }
+                    
                     if let summary = summary {
                         SummarySection(summary: summary)
                     } else if let session = session {
@@ -44,6 +48,8 @@ struct SessionDetailScreen: View {
                     
                     if !turns.isEmpty {
                         TranscriptSection(turns: turns)
+                    } else if let session = session {
+                        EmptyTranscriptView(isLoggingEnabled: session.loggingEnabledSnapshot)
                     }
                 }
             }
@@ -197,6 +203,103 @@ struct ProcessingSummaryView: View {
                     .font(.body)
                     .foregroundColor(.secondary)
             }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct SessionMetadataSection: View {
+    let session: Session
+    
+    private var formattedStartDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: session.startedAt)
+    }
+    
+    private var formattedEndDate: String? {
+        guard let endedAt = session.endedAt else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: endedAt)
+    }
+    
+    private var statusDescription: (text: String, color: Color) {
+        switch session.summaryStatus {
+        case .pending:
+            return ("Processing", .orange)
+        case .ready:
+            return ("Ready", .green)
+        case .failed:
+            return ("Failed", .red)
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Session Info")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Spacer()
+                Text(statusDescription.text)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(statusDescription.color.opacity(0.15))
+                    .foregroundColor(statusDescription.color)
+                    .cornerRadius(8)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Label(session.context.rawValue.capitalized, systemImage: "network")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Label(formattedStartDate, systemImage: "clock")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                if let endDate = formattedEndDate {
+                    Label("Ended \(endDate)", systemImage: "stopwatch")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack {
+                    Image(systemName: session.loggingEnabledSnapshot ? "checkmark.shield" : "nosign")
+                    Text(session.loggingEnabledSnapshot ? "Logging enabled" : "Logging disabled")
+                }
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct EmptyTranscriptView: View {
+    let isLoggingEnabled: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Transcript")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text(isLoggingEnabled
+                 ? "We haven't received transcript turns yet. This can take a few moments after the call ends—pull to refresh if it takes longer than expected."
+                 : "Transcript history is unavailable because logging was disabled for this call.")
+                .font(.body)
+                .foregroundColor(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

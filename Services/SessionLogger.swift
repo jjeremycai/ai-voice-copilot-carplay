@@ -209,7 +209,7 @@ class SessionLogger {
         let decoder = createDecoder()
         
         struct SessionDetailResponse: Codable {
-            let session: Session
+            let session: SessionDTO
             let summary: SessionSummary?
             let turns: [Turn]
         }
@@ -222,7 +222,7 @@ class SessionLogger {
             )
             
             return SessionDetailData(
-                session: detailResponse.session,
+                session: detailResponse.session.toModel(),
                 summary: detailResponse.summary,
                 turns: detailResponse.turns
             )
@@ -238,7 +238,7 @@ class SessionLogger {
                 sessionData = data
             }
             
-            let legacySession = try decoder.decode(Session.self, from: sessionData)
+            let legacySession = try decoder.decode(SessionDTO.self, from: sessionData).toModel()
             
             async let turns = fetchSessionTurns(sessionID: sessionID)
             async let summary = fetchSessionSummary(sessionID: sessionID)
@@ -366,4 +366,36 @@ struct SessionDetailData {
     let session: Session
     let summary: SessionSummary?
     let turns: [Turn]
+}
+
+private struct SessionDTO: Codable {
+    let id: String
+    let userId: String?
+    let context: Session.SessionContext
+    let startedAt: Date
+    let endedAt: Date?
+    let loggingEnabledSnapshot: Bool
+    let summaryStatus: Session.SummaryStatus?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId = "user_id"
+        case context
+        case startedAt = "started_at"
+        case endedAt = "ended_at"
+        case loggingEnabledSnapshot = "logging_enabled_snapshot"
+        case summaryStatus = "summary_status"
+    }
+    
+    func toModel() -> Session {
+        Session(
+            id: id,
+            userId: userId ?? "unknown",
+            context: context,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            loggingEnabledSnapshot: loggingEnabledSnapshot,
+            summaryStatus: summaryStatus ?? .pending
+        )
+    }
 }
