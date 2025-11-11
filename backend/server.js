@@ -539,6 +539,13 @@ app.get('/v1/sessions/:id', authenticateToken, (req, res) => {
       SELECT * FROM turns WHERE session_id = ? ORDER BY timestamp ASC
     `).all(sessionId);
 
+    console.log(`📊 Returning session ${sessionId}:`, {
+      sessionFields: Object.keys(session),
+      summaryFields: summary ? Object.keys(summary) : null,
+      turnsCount: turns.length,
+      firstTurnFields: turns[0] ? Object.keys(turns[0]) : null
+    });
+
     res.json({
       session,
       summary: summary || null,

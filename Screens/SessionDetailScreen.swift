@@ -269,7 +269,7 @@ struct SummarySection: View {
                 request.httpMethod = "PUT"
                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-                if let token = try? Configuration.shared.authService.getAuthToken() {
+                if let token = AuthService.shared.authToken {
                     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 }
 
@@ -434,17 +434,47 @@ struct EmptyTranscriptView: View {
 
 struct TranscriptSection: View {
     let turns: [Turn]
-    
+    @State private var showShareSheet = false
+
+    private var transcriptText: String {
+        turns.map { turn in
+            let timeStr = formatTime(turn.timestamp)
+            let speaker = turn.speaker == .user ? "You" : "Assistant"
+            return "[\(timeStr)] \(speaker): \(turn.text)"
+        }.joined(separator: "\n\n")
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Transcript")
-                .font(.title2)
-                .fontWeight(.bold)
-            
+            HStack {
+                Text("Transcript")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Spacer()
+
+                Button(action: {
+                    showShareSheet = true
+                }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.title3)
+                        .foregroundColor(.blue)
+                }
+            }
+
             ForEach(turns) { turn in
                 TranscriptBubble(turn: turn)
             }
         }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(items: [transcriptText])
+        }
+    }
+
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
@@ -481,6 +511,16 @@ struct TranscriptBubble: View {
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

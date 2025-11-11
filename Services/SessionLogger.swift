@@ -432,7 +432,8 @@ private struct SessionDTO: Codable {
     let endedAt: String?
     let loggingEnabledSnapshot: Bool?
     let summaryStatus: String?
-    
+    let durationMinutes: Int?
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
@@ -441,8 +442,9 @@ private struct SessionDTO: Codable {
         case endedAt = "ended_at"
         case loggingEnabledSnapshot = "logging_enabled_snapshot"
         case summaryStatus = "summary_status"
+        case durationMinutes = "duration_minutes"
     }
-    
+
     func toModel() -> Session {
         Session(
             id: id ?? "session-\(UUID().uuidString)",
@@ -451,7 +453,8 @@ private struct SessionDTO: Codable {
             startedAt: parseDate(from: startedAt) ?? Date(),
             endedAt: parseDate(from: endedAt),
             loggingEnabledSnapshot: loggingEnabledSnapshot ?? false,
-            summaryStatus: Session.SummaryStatus(rawValue: summaryStatus ?? "pending") ?? .pending
+            summaryStatus: Session.SummaryStatus(rawValue: summaryStatus ?? "pending") ?? .pending,
+            durationMinutes: durationMinutes
         )
     }
     
