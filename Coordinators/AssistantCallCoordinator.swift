@@ -13,6 +13,7 @@ enum CallState {
     case disconnecting
 }
 
+@MainActor
 class AssistantCallCoordinator: ObservableObject {
     static let shared = AssistantCallCoordinator()
     
