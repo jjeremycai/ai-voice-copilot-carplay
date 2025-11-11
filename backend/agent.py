@@ -17,10 +17,19 @@ logger = logging.getLogger(__name__)
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://shaw.up.railway.app')
 
 class Assistant(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="You are a helpful voice AI assistant for CarPlay. Keep responses concise, clear, and in English for safe driving. Default to English unless the driver explicitly asks for another language. When users ask questions requiring current information (news, weather, traffic, events, facts), use the web_search tool."
-        )
+    def __init__(self, tool_calling_enabled=True, web_search_enabled=True) -> None:
+        # Update instructions based on tool availability
+        base_instructions = "You are a helpful voice AI assistant for CarPlay. Keep responses concise, clear, and in English for safe driving. Default to English unless the driver explicitly asks for another language."
+
+        if tool_calling_enabled and web_search_enabled:
+            instructions = base_instructions + " When users ask questions requiring current information (news, weather, traffic, events, facts), use the web_search tool."
+        else:
+            instructions = base_instructions + " Rely on your built-in knowledge to answer questions."
+
+        super().__init__(instructions=instructions)
+
+        # Store settings
+        self._web_search_enabled = web_search_enabled
 
     @function_tool()
     async def web_search(
@@ -36,6 +45,10 @@ class Assistant(Agent):
         Returns:
             A concise answer based on web search results
         """
+        # Check if web search is enabled
+        if not self._web_search_enabled:
+            return "Web search is currently disabled in your settings."
+
         try:
             api_key = os.getenv('PERPLEXITY_API_KEY')
             if not api_key:
@@ -126,6 +139,10 @@ async def entrypoint(ctx: agents.JobContext):
     realtime_mode = metadata.get('realtime', False)  # Backend sends true for full Realtime, false for hybrid
     voice = metadata.get('voice', 'cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc')
     model = metadata.get('model', 'openai/gpt-5-mini')
+    tool_calling_enabled = metadata.get('tool_calling_enabled', True)
+    web_search_enabled = metadata.get('web_search_enabled', True)
+
+    logger.info(f"🔧 Tool settings - Tool calling: {tool_calling_enabled}, Web search: {web_search_enabled}")
 
     try:
         if realtime_mode:
@@ -155,7 +172,7 @@ async def entrypoint(ctx: agents.JobContext):
 
             await agent_session.start(
                 room=ctx.room,
-                agent=Assistant(),
+                agent=Assistant(tool_calling_enabled=tool_calling_enabled, web_search_enabled=web_search_enabled),
                 room_input_options=RoomInputOptions(),
             )
 
@@ -194,7 +211,7 @@ async def entrypoint(ctx: agents.JobContext):
 
             await agent_session.start(
                 room=ctx.room,
-                agent=Assistant(),
+                agent=Assistant(tool_calling_enabled=tool_calling_enabled, web_search_enabled=web_search_enabled),
                 room_input_options=RoomInputOptions(),
             )
 

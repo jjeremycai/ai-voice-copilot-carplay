@@ -312,7 +312,7 @@ app.get('/health/agent', (req, res) => {
 // 1. POST /v1/sessions/start - Start new session
 app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
   try {
-    const { context, model, voice } = req.body;
+    const { context, model, voice, tool_calling_enabled, web_search_enabled } = req.body;
 
     if (!context || !['phone', 'carplay'].includes(context)) {
       return res.status(400).json({ error: 'Invalid context' });
@@ -347,12 +347,33 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
       'openai/gpt-4.1',
       'openai/gpt-4.1-mini',
       'openai/gpt-4.1-nano',
+      // Anthropic models available through LiveKit Inference
+      'claude-sonnet-4-5',
+      'claude-haiku-4-5',
       // Google models available through LiveKit Inference
       'google/gemini-2.5-pro',
       'google/gemini-2.5-flash-lite'
     ];
 
+    // Pro-only models require active subscription
+    const proOnlyModels = [
+      'claude-sonnet-4-5',
+      'google/gemini-2.5-pro'
+    ];
+
     const selectedModel = !useRealtimeMode && model && validModels.includes(model) ? model : null;
+
+    // Check if user is trying to use a Pro-only model without Pro subscription
+    if (selectedModel && proOnlyModels.includes(selectedModel)) {
+      const hasPro = entitlementCheck.allowed && entitlementCheck.reason === 'subscription';
+      if (!hasPro) {
+        return res.status(403).json({
+          error: 'PRO_REQUIRED',
+          message: 'This model requires a Pro subscription.',
+          model: selectedModel
+        });
+      }
+    }
 
     const sessionId = `session-${crypto.randomUUID()}`;
     const roomName = generateRoomName();
@@ -382,12 +403,12 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
     if (useRealtimeMode) {
       console.log(`  OpenAI Realtime voice: ${selectedVoice}`);
     } else {
-      console.log(`  Model: ${selectedModel || 'openai/gpt-5-mini'}`);
+      console.log(`  Model: ${selectedModel || 'openai/gpt-5-nano'}`);
       console.log(`  TTS voice: ${selectedVoice}`);
     }
 
     // Dispatch agent to room (don't wait for it, run in background)
-    dispatchAgentToRoom(roomName, sessionId, selectedModel, selectedVoice, useRealtimeMode).catch(error => {
+    dispatchAgentToRoom(roomName, sessionId, selectedModel, selectedVoice, useRealtimeMode, tool_calling_enabled, web_search_enabled).catch(error => {
       console.error(`Failed to dispatch agent for session ${sessionId}:`, error.message);
     });
 
@@ -397,7 +418,7 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
       livekit_token: livekitToken,
       room_name: roomName,
       mode: useRealtimeMode ? 'realtime' : 'hybrid',
-      model: selectedModel || (useRealtimeMode ? 'openai-realtime' : 'openai/gpt-5-mini'),
+      model: selectedModel || (useRealtimeMode ? 'openai-realtime' : 'openai/gpt-5-nano'),
       voice: selectedVoice
     });
   } catch (error) {
