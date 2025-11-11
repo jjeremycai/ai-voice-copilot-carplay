@@ -7,6 +7,7 @@ import Foundation
 import AVFoundation
 import LiveKit
 
+@MainActor
 protocol LiveKitServiceDelegate: AnyObject {
     func liveKitServiceDidConnect()
     func liveKitServiceDidDisconnect()
@@ -79,20 +80,19 @@ final class LiveKitService: @unchecked Sendable {
     }
 }
 
+@MainActor
 extension LiveKitService: RoomDelegate {
     func roomDidConnect(_ room: Room) {
         // Connection established
     }
 
     func room(_ room: Room, didDisconnectWithError error: Error?) {
-        Task { @MainActor in
-            self.isConnected = false
-            self.room = nil
-            if let error = error {
-                self.delegate?.liveKitServiceDidFail(error: error)
-            } else {
-                self.delegate?.liveKitServiceDidDisconnect()
-            }
+        isConnected = false
+        self.room = nil
+        if let error = error {
+            delegate?.liveKitServiceDidFail(error: error)
+        } else {
+            delegate?.liveKitServiceDidDisconnect()
         }
     }
 

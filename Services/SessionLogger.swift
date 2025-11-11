@@ -168,6 +168,19 @@ class SessionLogger {
         let detailResponse: SessionDetailResponse = try handleResponse(data: data, response: response, decoder: decoder)
         return (detailResponse.summary, detailResponse.turns)
     }
+
+    func getUsageStats() async throws -> UsageStatsResponse {
+        guard let url = URL(string: "\(configuration.apiBaseURL)/usage/stats") else {
+            throw SessionLoggerError.invalidURL
+        }
+
+        let request = createAuthenticatedRequest(url: url, method: "GET")
+
+        let (data, response) = try await urlSession.data(for: request)
+
+        let decoder = createDecoder()
+        return try handleResponse(data: data, response: response, decoder: decoder)
+    }
     
     func deleteSession(sessionID: String) async throws {
         guard let url = URL(string: "\(configuration.apiBaseURL)/sessions/\(sessionID)") else {
@@ -222,3 +235,11 @@ enum SessionLoggerError: LocalizedError {
 
 struct EmptyResponse: Codable {}
 
+struct UsageStatsResponse: Codable {
+    let usedMinutes: Int
+    let remainingMinutes: Int?
+    let monthlyLimit: Int?
+    let subscriptionTier: String
+    let billingPeriodStart: Date
+    let billingPeriodEnd: Date
+}

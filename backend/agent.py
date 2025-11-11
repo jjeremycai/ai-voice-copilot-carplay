@@ -3,7 +3,7 @@ import logging
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions
-from livekit.plugins import silero
+from livekit.plugins import openai
 
 # Load environment variables from .env file
 load_dotenv()
@@ -15,24 +15,23 @@ logger = logging.getLogger(__name__)
 class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
-            instructions="You are a helpful voice AI assistant for CarPlay. Keep responses concise and clear for safe driving."
+            instructions="You are a helpful voice AI assistant for CarPlay. Keep responses concise and clear for safe driving. Answer questions directly and briefly."
         )
 
 async def entrypoint(ctx: agents.JobContext):
-    """Entry point for the LiveKit agent"""
+    """Entry point for the LiveKit agent - using OpenAI Realtime API"""
     logger.info(f"🎙️  Agent joining room: {ctx.room.name}")
 
-    # Get model and TTS from room metadata if available
-    model = "openai/gpt-4.1-mini"  # Default
-    tts = "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # Default Coral voice
-
     try:
-        session = AgentSession(
-            stt="deepgram/nova-2-general:en",  # Using Deepgram via LiveKit Inference
-            llm=model,
-            tts=tts,
-            vad=silero.VAD.load(),
+        # Use OpenAI Realtime model for direct speech-to-speech
+        # This bypasses separate STT/LLM/TTS pipeline for lower latency
+        realtime_model = openai.realtime.RealtimeModel(
+            voice="alloy",  # OpenAI Realtime voices: alloy, echo, fable, onyx, nova, shimmer
+            temperature=0.8,
+            modalities=["text", "audio"],
         )
+
+        session = AgentSession(llm=realtime_model)
 
         await session.start(
             room=ctx.room,
@@ -44,7 +43,7 @@ async def entrypoint(ctx: agents.JobContext):
             instructions="Greet the user briefly and ask how you can help them."
         )
 
-        logger.info("✅ Agent session started successfully")
+        logger.info("✅ Realtime agent session started successfully")
 
     except Exception as e:
         logger.error(f"❌ Agent error: {e}")

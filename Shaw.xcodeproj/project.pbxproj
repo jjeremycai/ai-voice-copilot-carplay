@@ -10,7 +10,10 @@
 		02959624A5982587B96798E2 /* CallKitProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14066993B218B00EAB9281D /* CallKitProtocols.swift */; };
 		0EFA00C96BE75477477D0764 /* CallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B47152B25017465B10BC0D70 /* CallManager.swift */; };
 		153F926AE75A9DEE3666FB43 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A7C61059E1FBED46737C3B /* AppCoordinator.swift */; };
+		214BE7CF0C7B4A119FEB7999 /* CallScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE765871A2DC4733B411C8CB /* CallScreen.swift */; };
 		37A2552CD8F5FECEAF8CFE8C /* SessionLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AD0E191A00BF314925834 /* SessionLogger.swift */; };
+		3AF7500883614872B893F60F /* VoiceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */; };
+		4842ACCA0B0D43E4989ABC29 /* VoicePreviewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */; };
 		610FF6E03DEB7DEBB6E8FB0B /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79AD2CD15C369F5E45DDE03 /* SettingsScreen.swift */; };
 		6C58F99A69ECED8053CC2CBF /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9AEA20E2FF6F23D5382061B /* AuthService.swift */; };
 		845B4F43C53ADB1782DD323B /* SessionDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB9C43A548091AD05A0CE38 /* SessionDetailScreen.swift */; };
@@ -39,9 +42,6 @@
 		F74BBF634EE88CF77F326089 /* SessionsListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41AE9456A9C81A52015484E0 /* SessionsListScreen.swift */; };
 		F9B8E7C6D5A4F3E8C9D2E5F6 /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E9F8D7C6A5E3F9D8C1F7E8 /* MockURLProtocol.swift */; };
 		F9E8D7C6B5F4E9D8C7F2E6D3 /* SessionLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F9D8C6A5B4F3E9D8C1F7E4 /* SessionLoggerTests.swift */; };
-		214BE7CF0C7B4A119FEB7999 /* CallScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE765871A2DC4733B411C8CB /* CallScreen.swift */; };
-		4842ACCA0B0D43E4989ABC29 /* VoicePreviewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */; };
-		3AF7500883614872B893F60F /* VoiceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,14 +50,14 @@
 			containerPortal = 95C58B562B75208B00FB7199 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 95C58B5D2B75208B00FB7199;
-			remoteInfo = CarPlaySwiftUI;
+			remoteInfo = Shaw;
 		};
 		95C58B792B75208F00FB7199 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 95C58B562B75208B00FB7199 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 95C58B5D2B75208B00FB7199;
-			remoteInfo = CarPlaySwiftUI;
+			remoteInfo = Shaw;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -68,14 +68,15 @@
 		5F4B35EC9C1C4B6E70B04D67 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		6FB9C43A548091AD05A0CE38 /* SessionDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailScreen.swift; sourceTree = "<group>"; };
 		750AD0E191A00BF314925834 /* SessionLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLogger.swift; sourceTree = "<group>"; };
+		78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceModels.swift; sourceTree = "<group>"; };
 		955C4F1C4DA930C652EC715E /* Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Configuration.swift; sourceTree = "<group>"; };
-		95C58B5E2B75208B00FB7199 /* CarPlaySwiftUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CarPlaySwiftUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		95C58B5E2B75208B00FB7199 /* Shaw.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shaw.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95C58B632B75208B00FB7199 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		95C58B652B75208F00FB7199 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		95C58B682B75208F00FB7199 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		95C58B6E2B75208F00FB7199 /* CarPlaySwiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarPlaySwiftUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		95C58B6E2B75208F00FB7199 /* ShawTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShawTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		95C58B722B75208F00FB7199 /* CarPlaySwiftUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySwiftUITests.swift; sourceTree = "<group>"; };
-		95C58B782B75208F00FB7199 /* CarPlaySwiftUIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CarPlaySwiftUIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		95C58B782B75208F00FB7199 /* ShawUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShawUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		95C58B7C2B75208F00FB7199 /* CarPlaySwiftUIUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySwiftUIUITests.swift; sourceTree = "<group>"; };
 		95C58B7E2B75208F00FB7199 /* CarPlaySwiftUIUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySwiftUIUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		95C58B8B2B75212C00FB7199 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
@@ -85,23 +86,22 @@
 		95C58B932B7521F600FB7199 /* CarPlay.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CarPlay.framework; path = System/Library/Frameworks/CarPlay.framework; sourceTree = SDKROOT; };
 		95C58B952B75234300FB7199 /* Shaw.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Shaw.entitlements; sourceTree = "<group>"; };
 		9675F68966B06ED84429C11C /* LiveKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitService.swift; sourceTree = "<group>"; };
+		9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicePreviewService.swift; sourceTree = "<group>"; };
 		A14066993B218B00EAB9281D /* CallKitProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallKitProtocols.swift; sourceTree = "<group>"; };
 		A3D8E9F7C5B4A2E8D9F1C6E7 /* MockCallKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCallKit.swift; sourceTree = "<group>"; };
 		A79AD2CD15C369F5E45DDE03 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		A9AEA20E2FF6F23D5382061B /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		B47152B25017465B10BC0D70 /* CallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallManager.swift; sourceTree = "<group>"; };
 		B4E9F8D7C6A5E3F9D8C1F7E8 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
-		B70B57872EC2785D00966EC2 /* CarPlaySwiftUI.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CarPlaySwiftUI.xctestplan; sourceTree = "<group>"; };
+		B70B57872EC2785D00966EC2 /* Shaw.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Shaw.xctestplan; sourceTree = "<group>"; };
 		C0A7C61059E1FBED46737C3B /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		C5F8E9D7A6B4F3E8D9C2E7F1 /* CallManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallManagerTests.swift; sourceTree = "<group>"; };
 		C97D27792DB98A6415A139B2 /* OnboardingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingScreen.swift; sourceTree = "<group>"; };
 		D6E9F8C7B5A4E3D9F8C2E7F3 /* AssistantCallCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantCallCoordinatorTests.swift; sourceTree = "<group>"; };
+		DE765871A2DC4733B411C8CB /* CallScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallScreen.swift; sourceTree = "<group>"; };
 		E7F9D8C6A5B4F3E9D8C1F7E4 /* SessionLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLoggerTests.swift; sourceTree = "<group>"; };
 		EE42B9415312B56F7EA4DB3F /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		F8D9E7C6B5A4F3E8D9F2E7C5 /* AuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthServiceTests.swift; sourceTree = "<group>"; };
-		DE765871A2DC4733B411C8CB /* CallScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallScreen.swift; sourceTree = "<group>"; };
-		9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoicePreviewService.swift; sourceTree = "<group>"; };
-		78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,7 +149,7 @@
 				750AD0E191A00BF314925834 /* SessionLogger.swift */,
 				A9AEA20E2FF6F23D5382061B /* AuthService.swift */,
 				955C4F1C4DA930C652EC715E /* Configuration.swift */,
-							9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */,
+				9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -162,7 +162,7 @@
 				41AE9456A9C81A52015484E0 /* SessionsListScreen.swift */,
 				6FB9C43A548091AD05A0CE38 /* SessionDetailScreen.swift */,
 				A79AD2CD15C369F5E45DDE03 /* SettingsScreen.swift */,
-							DE765871A2DC4733B411C8CB /* CallScreen.swift */,
+				DE765871A2DC4733B411C8CB /* CallScreen.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -170,10 +170,10 @@
 		95C58B552B75208B00FB7199 = {
 			isa = PBXGroup;
 			children = (
-				B70B57872EC2785D00966EC2 /* CarPlaySwiftUI.xctestplan */,
-				95C58B602B75208B00FB7199,
-				95C58B712B75208F00FB7199 /* CarPlaySwiftUITests */,
-				95C58B7B2B75208F00FB7199 /* CarPlaySwiftUIUITests */,
+				B70B57872EC2785D00966EC2 /* Shaw.xctestplan */,
+				95C58B602B75208B00FB7199 /* Shaw */,
+				95C58B712B75208F00FB7199 /* ShawTests */,
+				95C58B7B2B75208F00FB7199 /* ShawUITests */,
 				95C58B5F2B75208B00FB7199 /* Products */,
 				95C58B922B7521F600FB7199 /* Frameworks */,
 			);
@@ -182,9 +182,9 @@
 		95C58B5F2B75208B00FB7199 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				95C58B5E2B75208B00FB7199 /* CarPlaySwiftUI.app */,
-				95C58B6E2B75208F00FB7199 /* CarPlaySwiftUITests.xctest */,
-				95C58B782B75208F00FB7199 /* CarPlaySwiftUIUITests.xctest */,
+				95C58B5E2B75208B00FB7199 /* Shaw.app */,
+				95C58B6E2B75208F00FB7199 /* ShawTests.xctest */,
+				95C58B782B75208F00FB7199 /* ShawUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -205,6 +205,7 @@
 				95C58B952B75234300FB7199 /* Shaw.entitlements */,
 				95C58B672B75208F00FB7199 /* Preview Content */,
 			);
+			name = Shaw;
 			sourceTree = "<group>";
 		};
 		95C58B672B75208F00FB7199 /* Preview Content */ = {
@@ -215,7 +216,7 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		95C58B712B75208F00FB7199 /* CarPlaySwiftUITests */ = {
+		95C58B712B75208F00FB7199 /* ShawTests */ = {
 			isa = PBXGroup;
 			children = (
 				95C58B722B75208F00FB7199 /* CarPlaySwiftUITests.swift */,
@@ -225,16 +226,16 @@
 				F8D9E7C6B5A4F3E8D9F2E7C5 /* AuthServiceTests.swift */,
 				A9E8D7F6C5B4E3D8F9C1E7A2 /* Mocks */,
 			);
-			path = CarPlaySwiftUITests;
+			path = ShawTests;
 			sourceTree = "<group>";
 		};
-		95C58B7B2B75208F00FB7199 /* CarPlaySwiftUIUITests */ = {
+		95C58B7B2B75208F00FB7199 /* ShawUITests */ = {
 			isa = PBXGroup;
 			children = (
 				95C58B7C2B75208F00FB7199 /* CarPlaySwiftUIUITests.swift */,
 				95C58B7E2B75208F00FB7199 /* CarPlaySwiftUIUITestsLaunchTests.swift */,
 			);
-			path = CarPlaySwiftUIUITests;
+			path = ShawUITests;
 			sourceTree = "<group>";
 		};
 		95C58B922B7521F600FB7199 /* Frameworks */ = {
@@ -250,7 +251,7 @@
 			children = (
 				5F4B35EC9C1C4B6E70B04D67 /* Session.swift */,
 				EE42B9415312B56F7EA4DB3F /* UserSettings.swift */,
-							78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */,
+				78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -267,9 +268,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		95C58B5D2B75208B00FB7199 /* CarPlaySwiftUI */ = {
+		95C58B5D2B75208B00FB7199 /* Shaw */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95C58B822B75208F00FB7199 /* Build configuration list for PBXNativeTarget "CarPlaySwiftUI" */;
+			buildConfigurationList = 95C58B822B75208F00FB7199 /* Build configuration list for PBXNativeTarget "Shaw" */;
 			buildPhases = (
 				95C58B5A2B75208B00FB7199 /* Sources */,
 				95C58B5B2B75208B00FB7199 /* Frameworks */,
@@ -279,17 +280,17 @@
 			);
 			dependencies = (
 			);
-			name = CarPlaySwiftUI;
+			name = Shaw;
 			packageProductDependencies = (
 				A7E8F3C4D6B9E1F2A8C5D7E9 /* LiveKit */,
 			);
-			productName = CarPlaySwiftUI;
-			productReference = 95C58B5E2B75208B00FB7199 /* CarPlaySwiftUI.app */;
+			productName = Shaw;
+			productReference = 95C58B5E2B75208B00FB7199 /* Shaw.app */;
 			productType = "com.apple.product-type.application";
 		};
-		95C58B6D2B75208F00FB7199 /* CarPlaySwiftUITests */ = {
+		95C58B6D2B75208F00FB7199 /* ShawTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95C58B852B75208F00FB7199 /* Build configuration list for PBXNativeTarget "CarPlaySwiftUITests" */;
+			buildConfigurationList = 95C58B852B75208F00FB7199 /* Build configuration list for PBXNativeTarget "ShawTests" */;
 			buildPhases = (
 				95C58B6A2B75208F00FB7199 /* Sources */,
 				95C58B6B2B75208F00FB7199 /* Frameworks */,
@@ -300,14 +301,14 @@
 			dependencies = (
 				95C58B702B75208F00FB7199 /* PBXTargetDependency */,
 			);
-			name = CarPlaySwiftUITests;
-			productName = CarPlaySwiftUITests;
-			productReference = 95C58B6E2B75208F00FB7199 /* CarPlaySwiftUITests.xctest */;
+			name = ShawTests;
+			productName = ShawTests;
+			productReference = 95C58B6E2B75208F00FB7199 /* ShawTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		95C58B772B75208F00FB7199 /* CarPlaySwiftUIUITests */ = {
+		95C58B772B75208F00FB7199 /* ShawUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95C58B882B75208F00FB7199 /* Build configuration list for PBXNativeTarget "CarPlaySwiftUIUITests" */;
+			buildConfigurationList = 95C58B882B75208F00FB7199 /* Build configuration list for PBXNativeTarget "ShawUITests" */;
 			buildPhases = (
 				95C58B742B75208F00FB7199 /* Sources */,
 				95C58B752B75208F00FB7199 /* Frameworks */,
@@ -318,9 +319,9 @@
 			dependencies = (
 				95C58B7A2B75208F00FB7199 /* PBXTargetDependency */,
 			);
-			name = CarPlaySwiftUIUITests;
-			productName = CarPlaySwiftUIUITests;
-			productReference = 95C58B782B75208F00FB7199 /* CarPlaySwiftUIUITests.xctest */;
+			name = ShawUITests;
+			productName = ShawUITests;
+			productReference = 95C58B782B75208F00FB7199 /* ShawUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -346,7 +347,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 95C58B592B75208B00FB7199 /* Build configuration list for PBXProject "CarPlaySwiftUI" */;
+			buildConfigurationList = 95C58B592B75208B00FB7199 /* Build configuration list for PBXProject "Shaw" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -362,9 +363,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				95C58B5D2B75208B00FB7199 /* CarPlaySwiftUI */,
-				95C58B6D2B75208F00FB7199 /* CarPlaySwiftUITests */,
-				95C58B772B75208F00FB7199 /* CarPlaySwiftUIUITests */,
+				95C58B5D2B75208B00FB7199 /* Shaw */,
+				95C58B6D2B75208F00FB7199 /* ShawTests */,
+				95C58B772B75208F00FB7199 /* ShawUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -419,9 +420,9 @@
 				610FF6E03DEB7DEBB6E8FB0B /* SettingsScreen.swift in Sources */,
 				153F926AE75A9DEE3666FB43 /* AppCoordinator.swift in Sources */,
 				8ACAA9DD5F346B0A84B2425C /* AssistantCallCoordinator.swift in Sources */,
-							214BE7CF0C7B4A119FEB7999 /* CallScreen.swift in Sources */,
+				214BE7CF0C7B4A119FEB7999 /* CallScreen.swift in Sources */,
 				4842ACCA0B0D43E4989ABC29 /* VoicePreviewService.swift in Sources */,
-							3AF7500883614872B893F60F /* VoiceModels.swift in Sources */,
+				3AF7500883614872B893F60F /* VoiceModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -453,12 +454,12 @@
 /* Begin PBXTargetDependency section */
 		95C58B702B75208F00FB7199 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 95C58B5D2B75208B00FB7199 /* CarPlaySwiftUI */;
+			target = 95C58B5D2B75208B00FB7199 /* Shaw */;
 			targetProxy = 95C58B6F2B75208F00FB7199 /* PBXContainerItemProxy */;
 		};
 		95C58B7A2B75208F00FB7199 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 95C58B5D2B75208B00FB7199 /* CarPlaySwiftUI */;
+			target = 95C58B5D2B75208B00FB7199 /* Shaw */;
 			targetProxy = 95C58B792B75208F00FB7199 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -609,7 +610,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.CarPlaySwiftUI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.Shaw;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -645,7 +646,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.CarPlaySwiftUI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.Shaw;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -663,16 +664,16 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8Q3RG3ULSU;
+				DEVELOPMENT_TEAM = C4ZTUACCUP;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.CarPlaySwiftUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.ShawTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CarPlaySwiftUI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CarPlaySwiftUI";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Shaw.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Shaw";
 			};
 			name = Debug;
 		};
@@ -682,16 +683,16 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8Q3RG3ULSU;
+				DEVELOPMENT_TEAM = C4ZTUACCUP;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.CarPlaySwiftUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.ShawTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CarPlaySwiftUI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CarPlaySwiftUI";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Shaw.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Shaw";
 			};
 			name = Release;
 		};
@@ -703,12 +704,12 @@
 				DEVELOPMENT_TEAM = 8Q3RG3ULSU;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.CarPlaySwiftUIUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.ShawUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CarPlaySwiftUI;
+				TEST_TARGET_NAME = Shaw;
 			};
 			name = Debug;
 		};
@@ -720,19 +721,19 @@
 				DEVELOPMENT_TEAM = 8Q3RG3ULSU;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.CarPlaySwiftUIUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vanities.ShawUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CarPlaySwiftUI;
+				TEST_TARGET_NAME = Shaw;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		95C58B592B75208B00FB7199 /* Build configuration list for PBXProject "CarPlaySwiftUI" */ = {
+		95C58B592B75208B00FB7199 /* Build configuration list for PBXProject "Shaw" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95C58B802B75208F00FB7199 /* Debug */,
@@ -741,7 +742,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		95C58B822B75208F00FB7199 /* Build configuration list for PBXNativeTarget "CarPlaySwiftUI" */ = {
+		95C58B822B75208F00FB7199 /* Build configuration list for PBXNativeTarget "Shaw" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95C58B832B75208F00FB7199 /* Debug */,
@@ -750,7 +751,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		95C58B852B75208F00FB7199 /* Build configuration list for PBXNativeTarget "CarPlaySwiftUITests" */ = {
+		95C58B852B75208F00FB7199 /* Build configuration list for PBXNativeTarget "ShawTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95C58B862B75208F00FB7199 /* Debug */,
@@ -759,7 +760,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		95C58B882B75208F00FB7199 /* Build configuration list for PBXNativeTarget "CarPlaySwiftUIUITests" */ = {
+		95C58B882B75208F00FB7199 /* Build configuration list for PBXNativeTarget "ShawUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95C58B892B75208F00FB7199 /* Debug */,

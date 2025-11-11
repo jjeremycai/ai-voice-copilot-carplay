@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "95C58B5D2B75208B00FB7199"
-               BuildableName = "CarPlaySwiftUI.app"
-               BlueprintName = "CarPlaySwiftUI"
+               BuildableName = "Shaw.app"
+               BlueprintName = "Shaw"
                ReferencedContainer = "container:Shaw.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -35,8 +35,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "95C58B6D2B75208F00FB7199"
-               BuildableName = "CarPlaySwiftUITests.xctest"
-               BlueprintName = "CarPlaySwiftUITests"
+               BuildableName = "ShawTests.xctest"
+               BlueprintName = "ShawTests"
                ReferencedContainer = "container:Shaw.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -46,8 +46,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "95C58B772B75208F00FB7199"
-               BuildableName = "CarPlaySwiftUIUITests.xctest"
-               BlueprintName = "CarPlaySwiftUIUITests"
+               BuildableName = "ShawUITests.xctest"
+               BlueprintName = "ShawUITests"
                ReferencedContainer = "container:Shaw.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -68,8 +68,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "95C58B5D2B75208B00FB7199"
-            BuildableName = "CarPlaySwiftUI.app"
-            BlueprintName = "CarPlaySwiftUI"
+            BuildableName = "Shaw.app"
+            BlueprintName = "Shaw"
             ReferencedContainer = "container:Shaw.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -85,8 +85,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "95C58B5D2B75208B00FB7199"
-            BuildableName = "CarPlaySwiftUI.app"
-            BlueprintName = "CarPlaySwiftUI"
+            BuildableName = "Shaw.app"
+            BlueprintName = "Shaw"
             ReferencedContainer = "container:Shaw.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

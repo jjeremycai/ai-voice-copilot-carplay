@@ -1,0 +1,23 @@
+# LiveKit Agent Configuration
+# This tells LiveKit Cloud how to run your voice AI agent
+
+[agent]
+# Name of the agent (used for dispatching)
+name = "shaw-voice-assistant"
+
+# Entry point - the Python file that contains your agent code
+entrypoint = "agent.py"
+
+# Runtime configuration
+runtime = "python"
+python_version = "3.11"
+
+# Region where the agent will run
+region = "us-east"
+
+# Environment variables (LiveKit will inject these from your project settings)
+# LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET are automatically provided
+# Add any additional env vars your agent needs:
+# [agent.env]
+# OPENAI_API_KEY = "${OPENAI_API_KEY}"
+# CARTESIA_API_KEY = "${CARTESIA_API_KEY}"

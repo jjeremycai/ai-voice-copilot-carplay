@@ -141,13 +141,11 @@ extension AssistantCallCoordinator: CallManagerDelegate {
 }
 
 extension AssistantCallCoordinator: LiveKitServiceDelegate {
-    nonisolated func liveKitServiceDidConnect() {
-        Task { @MainActor in
-            callState = .connected
-        }
+    func liveKitServiceDidConnect() {
+        callState = .connected
     }
 
-    nonisolated func liveKitServiceDidDisconnect() {
+    func liveKitServiceDidDisconnect() {
         // LiveKit disconnected, but call might still be active
         // Don't change state here - let CallManager handle it
     }
@@ -158,4 +156,3 @@ extension AssistantCallCoordinator: LiveKitServiceDelegate {
         endAssistantCall()
     }
 }
-
