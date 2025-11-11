@@ -80,7 +80,7 @@
 		95C58B8F2B75216A00FB7199 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		95C58B902B75219900FB7199 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		95C58B932B7521F600FB7199 /* CarPlay.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CarPlay.framework; path = System/Library/Frameworks/CarPlay.framework; sourceTree = SDKROOT; };
-		95C58B952B75234300FB7199 /* CarPlaySwiftUI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CarPlaySwiftUI.entitlements; sourceTree = "<group>"; };
+		95C58B952B75234300FB7199 /* Shaw.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Shaw.entitlements; sourceTree = "<group>"; };
 		9675F68966B06ED84429C11C /* LiveKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveKitService.swift; sourceTree = "<group>"; };
 		A14066993B218B00EAB9281D /* CallKitProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallKitProtocols.swift; sourceTree = "<group>"; };
 		A3D8E9F7C5B4A2E8D9F1C6E7 /* MockCallKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCallKit.swift; sourceTree = "<group>"; };
@@ -194,7 +194,7 @@
 				30F3F8C2C66A0F53C7A9EF9F /* Coordinators */,
 				95C58B8F2B75216A00FB7199 /* Info.plist */,
 				95C58B652B75208F00FB7199 /* Assets.xcassets */,
-				95C58B952B75234300FB7199 /* CarPlaySwiftUI.entitlements */,
+				95C58B952B75234300FB7199 /* Shaw.entitlements */,
 				95C58B672B75208F00FB7199 /* Preview Content */,
 			);
 			sourceTree = "<group>";
@@ -578,7 +578,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = CarPlaySwiftUI.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Shaw.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
@@ -614,7 +614,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = CarPlaySwiftUI.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Shaw.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";

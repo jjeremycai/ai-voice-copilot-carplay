@@ -84,14 +84,15 @@ extension LiveKitService: RoomDelegate {
         // Connection established
     }
 
-    @MainActor
     func room(_ room: Room, didDisconnectWithError error: Error?) {
-        self.isConnected = false
-        self.room = nil
-        if let error = error {
-            self.delegate?.liveKitServiceDidFail(error: error)
-        } else {
-            self.delegate?.liveKitServiceDidDisconnect()
+        Task { @MainActor in
+            self.isConnected = false
+            self.room = nil
+            if let error = error {
+                self.delegate?.liveKitServiceDidFail(error: error)
+            } else {
+                self.delegate?.liveKitServiceDidDisconnect()
+            }
         }
     }
 
