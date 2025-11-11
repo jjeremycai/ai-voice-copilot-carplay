@@ -118,28 +118,36 @@ class AssistantCallCoordinator: ObservableObject {
 }
 
 extension AssistantCallCoordinator: CallManagerDelegate {
-    func callManagerDidConnect() {
-        handleCallConnected()
+    nonisolated func callManagerDidConnect() {
+        Task { @MainActor in
+            handleCallConnected()
+        }
     }
-    
-    func callManagerDidDisconnect() {
-        endAssistantCall()
+
+    nonisolated func callManagerDidDisconnect() {
+        Task { @MainActor in
+            endAssistantCall()
+        }
     }
-    
-    func callManagerDidFail(error: Error) {
-        callState = .idle
-        pendingContext = nil
-        errorMessage = "Call failed: \(error.localizedDescription)"
-        print("Call failed: \(error)")
+
+    nonisolated func callManagerDidFail(error: Error) {
+        Task { @MainActor in
+            callState = .idle
+            pendingContext = nil
+            errorMessage = "Call failed: \(error.localizedDescription)"
+            print("Call failed: \(error)")
+        }
     }
 }
 
 extension AssistantCallCoordinator: LiveKitServiceDelegate {
-    func liveKitServiceDidConnect() {
-        callState = .connected
+    nonisolated func liveKitServiceDidConnect() {
+        Task { @MainActor in
+            callState = .connected
+        }
     }
-    
-    func liveKitServiceDidDisconnect() {
+
+    nonisolated func liveKitServiceDidDisconnect() {
         // LiveKit disconnected, but call might still be active
         // Don't change state here - let CallManager handle it
     }
