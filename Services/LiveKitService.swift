@@ -43,6 +43,9 @@ final class LiveKitService: @unchecked Sendable {
 
                 await self.subscribeToAssistantAudio(room: room)
 
+                // Register handler for transcription stream
+                await self.registerTranscriptionHandler(room: room, sessionID: sessionID)
+
                 self.isConnected = true
                 self.delegate?.liveKitServiceDidConnect()
             } catch {
@@ -70,6 +73,47 @@ final class LiveKitService: @unchecked Sendable {
     private func subscribeToAssistantAudio(room: Room) async {
         // Audio subscription is automatic in LiveKit
         // RoomDelegate will be notified when tracks are available
+    }
+
+    private func registerTranscriptionHandler(room: Room, sessionID: String) async {
+        // Register handler for transcription text stream
+        await room.registerTextStreamHandler(for: "lk.transcription") { [weak self] stream in
+            guard let self = self else { return }
+
+            Task {
+                do {
+                    // Read transcription segments from the stream
+                    for try await segment in stream {
+                        await self.handleTranscriptionSegment(segment, sessionID: sessionID)
+                    }
+                } catch {
+                    print("❌ Error reading transcription stream: \(error)")
+                }
+            }
+        }
+
+        print("✅ Registered transcription handler for session \(sessionID)")
+    }
+
+    private func handleTranscriptionSegment(_ segment: TextStreamSegment, sessionID: String) async {
+        // Extract speaker and text from transcription segment
+        guard let participantIdentity = segment.participant?.identity,
+              let text = segment.text, !text.isEmpty else {
+            return
+        }
+
+        // Determine speaker (user or assistant)
+        let speaker: Turn.Speaker = participantIdentity.contains("agent") ? .assistant : .user
+
+        print("📝 Transcription [\(speaker.rawValue)]: \(text)")
+
+        // Log the turn to backend
+        SessionLogger.shared.logTurn(
+            sessionID: sessionID,
+            speaker: speaker,
+            text: text,
+            timestamp: Date()
+        )
     }
 
     private func handleReconnection() {
