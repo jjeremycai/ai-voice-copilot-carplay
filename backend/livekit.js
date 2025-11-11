@@ -83,7 +83,7 @@ export function getLiveKitUrl() {
   return url;
 }
 
-export async function dispatchAgentToRoom(roomName, model, voice, realtime) {
+export async function dispatchAgentToRoom(roomName, sessionId, model, voice, realtime) {
   const apiKey = getLiveKitApiKey();
   const apiSecret = getLiveKitApiSecret();
   const url = getLiveKitUrl();
@@ -97,6 +97,7 @@ export async function dispatchAgentToRoom(roomName, model, voice, realtime) {
 
   // Agent metadata to pass to the LiveKit agent
   const agentMetadata = JSON.stringify({
+    session_id: sessionId,
     realtime: realtime || false,
     model: model || 'openai/gpt-4.1-mini',
     voice: voice || (realtime ? 'alloy' : 'cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc'),

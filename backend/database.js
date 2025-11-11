@@ -79,10 +79,44 @@ if (usePostgres) {
           UNIQUE(user_id, year, month)
         );
 
+        CREATE TABLE IF NOT EXISTS entitlements (
+          original_transaction_id TEXT PRIMARY KEY,
+          product_id TEXT NOT NULL,
+          status TEXT NOT NULL,
+          expires_at TIMESTAMPTZ,
+          revoked_at TIMESTAMPTZ,
+          environment TEXT NOT NULL,
+          last_update_at TIMESTAMPTZ NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS device_entitlements (
+          device_id TEXT NOT NULL,
+          original_transaction_id TEXT NOT NULL,
+          last_seen_at TIMESTAMPTZ NOT NULL,
+          PRIMARY KEY (device_id, original_transaction_id),
+          FOREIGN KEY (original_transaction_id) REFERENCES entitlements(original_transaction_id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS free_allowance (
+          device_id TEXT PRIMARY KEY,
+          minutes_used INTEGER NOT NULL DEFAULT 0,
+          period_start TIMESTAMPTZ NOT NULL,
+          period_end TIMESTAMPTZ NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        ALTER TABLE sessions ADD COLUMN IF NOT EXISTS original_transaction_id TEXT;
+        ALTER TABLE sessions ADD COLUMN IF NOT EXISTS entitlement_checked_at TIMESTAMPTZ;
+
         CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
         CREATE INDEX IF NOT EXISTS idx_turns_session_id ON turns(session_id);
         CREATE INDEX IF NOT EXISTS idx_summaries_session_id ON summaries(session_id);
         CREATE INDEX IF NOT EXISTS idx_monthly_usage_user_period ON monthly_usage(user_id, year, month);
+        CREATE INDEX IF NOT EXISTS idx_entitlements_status_expires ON entitlements(status, expires_at);
+        CREATE INDEX IF NOT EXISTS idx_device_entitlements_device ON device_entitlements(device_id);
+        CREATE INDEX IF NOT EXISTS idx_free_allowance_period ON free_allowance(period_start, period_end);
       `);
       console.log('✅ PostgreSQL tables created/verified');
     } catch (err) {
@@ -206,11 +240,54 @@ if (usePostgres) {
       UNIQUE(user_id, year, month)
     );
 
+    CREATE TABLE IF NOT EXISTS entitlements (
+      original_transaction_id TEXT PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      expires_at TEXT,
+      revoked_at TEXT,
+      environment TEXT NOT NULL,
+      last_update_at TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS device_entitlements (
+      device_id TEXT NOT NULL,
+      original_transaction_id TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL,
+      PRIMARY KEY (device_id, original_transaction_id),
+      FOREIGN KEY (original_transaction_id) REFERENCES entitlements(original_transaction_id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS free_allowance (
+      device_id TEXT PRIMARY KEY,
+      minutes_used INTEGER NOT NULL DEFAULT 0,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
     CREATE INDEX IF NOT EXISTS idx_turns_session_id ON turns(session_id);
     CREATE INDEX IF NOT EXISTS idx_summaries_session_id ON summaries(session_id);
     CREATE INDEX IF NOT EXISTS idx_monthly_usage_user_period ON monthly_usage(user_id, year, month);
+    CREATE INDEX IF NOT EXISTS idx_entitlements_status_expires ON entitlements(status, expires_at);
+    CREATE INDEX IF NOT EXISTS idx_device_entitlements_device ON device_entitlements(device_id);
+    CREATE INDEX IF NOT EXISTS idx_free_allowance_period ON free_allowance(period_start, period_end);
   `);
+
+  // Add new columns to existing sessions table (SQLite doesn't support IF NOT EXISTS in ALTER)
+  try {
+    db.exec('ALTER TABLE sessions ADD COLUMN original_transaction_id TEXT');
+  } catch (e) {
+    // Column already exists
+  }
+  try {
+    db.exec('ALTER TABLE sessions ADD COLUMN entitlement_checked_at TEXT');
+  } catch (e) {
+    // Column already exists
+  }
 
   console.log('✅ SQLite tables created/verified');
 }

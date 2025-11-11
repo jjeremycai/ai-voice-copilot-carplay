@@ -9,6 +9,7 @@ A hands-free AI voice assistant for iOS and CarPlay, enabling real-time voice co
 - 🎙️ **Real-time Audio** - LiveKit-powered audio streaming
 - 📝 **Session Logging** - Optional conversation recording and summaries
 - 🔐 **Secure Authentication** - Token-based auth with Keychain storage
+- 💳 **Monetization** - StoreKit 2 subscriptions with free tier (10 min/month)
 - ✅ **Comprehensive Testing** - Full unit test coverage
 
 ## Quick Start
@@ -59,6 +60,8 @@ Select target device/simulator and press **⌘R**
 
 ## Documentation
 
+- **[COMPLETE_IMPLEMENTATION_SUMMARY.md](COMPLETE_IMPLEMENTATION_SUMMARY.md)** - Monetization setup guide (iOS + Backend)
+- **[CLOUDKIT_SETUP.md](CLOUDKIT_SETUP.md)** - CloudKit sync configuration
 - **[SETUP.md](SETUP.md)** - Comprehensive setup guide
 - **[HANDOFF.md](HANDOFF.md)** - Engineering handoff document
 - **[Documentation/MASTER_SPEC.md](Documentation/MASTER_SPEC.md)** - Complete specification

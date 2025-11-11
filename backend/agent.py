@@ -1,5 +1,6 @@
 import os
 import logging
+import aiohttp
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions
@@ -12,11 +13,38 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Backend API configuration
+BACKEND_URL = os.getenv('BACKEND_URL', 'https://shaw.up.railway.app')
+
 class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
             instructions="You are a helpful voice AI assistant for CarPlay. Keep responses concise, clear, and in English for safe driving. Default to English unless the driver explicitly asks for another language."
         )
+
+async def save_turn(session_id: str, speaker: str, text: str):
+    """Save a conversation turn to the backend"""
+    if not session_id or not text.strip():
+        return
+
+    try:
+        url = f"{BACKEND_URL}/v1/sessions/{session_id}/turns"
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                url,
+                json={
+                    "speaker": speaker,
+                    "text": text.strip()
+                },
+                headers={"Content-Type": "application/json"}
+            ) as response:
+                if response.status == 201:
+                    logger.info(f"✅ Saved {speaker} turn for session {session_id[:20]}...")
+                else:
+                    error_text = await response.text()
+                    logger.error(f"❌ Failed to save turn: {response.status} - {error_text}")
+    except Exception as e:
+        logger.error(f"❌ Error saving turn: {e}")
 
 async def entrypoint(ctx: agents.JobContext):
     """Entry point for the LiveKit agent - supports both Realtime and Turn-based modes"""
@@ -25,10 +53,14 @@ async def entrypoint(ctx: agents.JobContext):
     # Parse metadata from dispatch
     import json
     metadata = {}
+    session_id = None
     try:
         if ctx.job.metadata:
             metadata = json.loads(ctx.job.metadata)
             logger.info(f"📋 Received metadata: {metadata}")
+            session_id = metadata.get('session_id')
+            if session_id:
+                logger.info(f"📝 Session ID: {session_id}")
     except Exception as e:
         logger.warning(f"Failed to parse metadata: {e}")
 
@@ -46,15 +78,26 @@ async def entrypoint(ctx: agents.JobContext):
                 modalities=["text", "audio"],
             )
 
-            session = AgentSession(llm=realtime_model)
+            agent_session = AgentSession(llm=realtime_model)
 
-            await session.start(
+            # Set up event handlers for transcription capture
+            @agent_session.on("user_speech_committed")
+            async def on_user_speech(msg: agents.llm.ChatMessage):
+                if session_id and msg.content:
+                    await save_turn(session_id, "user", msg.content)
+
+            @agent_session.on("agent_speech_committed")
+            async def on_agent_speech(msg: agents.llm.ChatMessage):
+                if session_id and msg.content:
+                    await save_turn(session_id, "assistant", msg.content)
+
+            await agent_session.start(
                 room=ctx.room,
                 agent=Assistant(),
                 room_input_options=RoomInputOptions(),
             )
 
-            await session.generate_reply(
+            await agent_session.generate_reply(
                 instructions="Greet the driver briefly in English and ask how you can help them."
             )
 
@@ -71,15 +114,26 @@ async def entrypoint(ctx: agents.JobContext):
                 modalities=["text", "audio"],
             )
 
-            session = AgentSession(llm=realtime_model)
+            agent_session = AgentSession(llm=realtime_model)
 
-            await session.start(
+            # Set up event handlers for transcription capture (same as realtime mode)
+            @agent_session.on("user_speech_committed")
+            async def on_user_speech(msg: agents.llm.ChatMessage):
+                if session_id and msg.content:
+                    await save_turn(session_id, "user", msg.content)
+
+            @agent_session.on("agent_speech_committed")
+            async def on_agent_speech(msg: agents.llm.ChatMessage):
+                if session_id and msg.content:
+                    await save_turn(session_id, "assistant", msg.content)
+
+            await agent_session.start(
                 room=ctx.room,
                 agent=Assistant(),
                 room_input_options=RoomInputOptions(),
             )
 
-            await session.generate_reply(
+            await agent_session.generate_reply(
                 instructions="Greet the driver briefly in English and ask how you can help them."
             )
 

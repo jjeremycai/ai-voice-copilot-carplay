@@ -23,11 +23,6 @@ final class LiveKitService: @unchecked Sendable {
     private var sessionId: String?
     private var room: Room?
 
-    private var accumulatedUserText: String = ""
-    private var accumulatedAssistantText: String = ""
-    private var lastSpeaker: Turn.Speaker?
-    private var turnAccumulationTimer: Timer?
-
     private init() {}
 
     func connect(sessionID: String, url: String, token: String) {
@@ -43,17 +38,21 @@ final class LiveKitService: @unchecked Sendable {
                 room.add(delegate: self)
 
                 try await room.connect(url: url, token: token)
+                print("✅ LiveKit room.connect() completed successfully")
+                print("📡 Room state: \(room.connectionState)")
 
                 try await self.publishMicrophone(room: room)
 
                 await self.subscribeToAssistantAudio(room: room)
 
-                // Register handler for transcription stream
-                await self.registerTranscriptionHandler(room: room, sessionID: sessionID)
-
                 self.isConnected = true
                 self.delegate?.liveKitServiceDidConnect()
             } catch {
+                print("❌ LiveKit connection failed: \(error)")
+                print("❌ Error details: \(error.localizedDescription)")
+                if let liveKitError = error as? LiveKitError {
+                    print("❌ LiveKit error type: \(liveKitError)")
+                }
                 self.delegate?.liveKitServiceDidFail(error: error)
             }
         }
@@ -62,11 +61,6 @@ final class LiveKitService: @unchecked Sendable {
     func disconnect() {
         Task { @MainActor [weak self] in
             guard let self = self, let room = self.room else { return }
-
-            self.turnAccumulationTimer?.invalidate()
-            self.turnAccumulationTimer = nil
-
-            self.flushAccumulatedText()
 
             await room.disconnect()
             self.room = nil
@@ -83,93 +77,6 @@ final class LiveKitService: @unchecked Sendable {
     private func subscribeToAssistantAudio(room: Room) async {
         // Audio subscription is automatic in LiveKit
         // RoomDelegate will be notified when tracks are available
-    }
-
-    private func registerTranscriptionHandler(room: Room, sessionID: String) async {
-        // Register handler for transcription text stream
-        // The handler receives a TextStreamReader and participant identity
-        do {
-            try await room.registerTextStreamHandler(for: "lk.transcription") { [weak self] stream, participantIdentity in
-                guard let self = self else { return }
-
-                Task {
-                    do {
-                        // Read text data from the stream
-                        for try await text in stream {
-                            if !text.isEmpty {
-                                await self.handleTranscriptionText(text, participantIdentity: participantIdentity, sessionID: sessionID)
-                            }
-                        }
-                    } catch {
-                        print("❌ Error reading transcription stream: \(error)")
-                    }
-                }
-            }
-
-            print("✅ Registered transcription handler for session \(sessionID)")
-        } catch {
-            print("❌ Failed to register transcription handler: \(error)")
-        }
-    }
-
-    private func handleTranscriptionText(_ text: String, participantIdentity: Participant.Identity, sessionID: String) async {
-        let identityString = participantIdentity.stringValue
-        let speaker: Turn.Speaker = identityString.contains("agent") ? .assistant : .user
-
-        print("📝 Transcription chunk [\(speaker.rawValue)]: \(text)")
-
-        await MainActor.run {
-            if speaker != lastSpeaker && lastSpeaker != nil {
-                flushAccumulatedText()
-            }
-
-            lastSpeaker = speaker
-
-            if speaker == .user {
-                if !accumulatedUserText.isEmpty {
-                    accumulatedUserText += " "
-                }
-                accumulatedUserText += text
-            } else {
-                if !accumulatedAssistantText.isEmpty {
-                    accumulatedAssistantText += " "
-                }
-                accumulatedAssistantText += text
-            }
-
-            turnAccumulationTimer?.invalidate()
-            turnAccumulationTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
-                self?.flushAccumulatedText()
-            }
-        }
-    }
-
-    private func flushAccumulatedText() {
-        guard let sessionID = sessionId else { return }
-
-        if !accumulatedUserText.isEmpty {
-            print("📝 Logging complete user turn: \(accumulatedUserText)")
-            SessionLogger.shared.logTurn(
-                sessionID: sessionID,
-                speaker: .user,
-                text: accumulatedUserText,
-                timestamp: Date()
-            )
-            accumulatedUserText = ""
-        }
-
-        if !accumulatedAssistantText.isEmpty {
-            print("📝 Logging complete assistant turn: \(accumulatedAssistantText)")
-            SessionLogger.shared.logTurn(
-                sessionID: sessionID,
-                speaker: .assistant,
-                text: accumulatedAssistantText,
-                timestamp: Date()
-            )
-            accumulatedAssistantText = ""
-        }
-
-        lastSpeaker = nil
     }
 
     private func handleReconnection() {

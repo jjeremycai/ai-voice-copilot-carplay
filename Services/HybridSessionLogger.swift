@@ -28,6 +28,14 @@ class HybridSessionLogger: ObservableObject {
     // MARK: - Session Lifecycle
 
     func startSession(context: Session.SessionContext) async throws -> String {
+        // Check entitlements first
+        await SubscriptionManager.shared.refreshEntitlementsAndSync()
+
+        // Backend will enforce entitlement check, but we can show better UX by checking locally first
+        if !SubscriptionManager.shared.state.isActive {
+            // Backend will return proper error with free tier info if applicable
+        }
+
         // Always track on backend for usage/billing
         let response = try await backend.startSession(context: context)
 
@@ -64,16 +72,6 @@ class HybridSessionLogger: ObservableObject {
 
         // Reload to show updated session
         await loadSessions()
-    }
-
-    func logTurn(sessionID: String, speaker: Turn.Speaker, text: String, timestamp: Date) {
-        guard settings.loggingEnabled else { return }
-
-        // Log to backend (fire and forget)
-        backend.logTurn(sessionID: sessionID, speaker: speaker, text: text, timestamp: timestamp)
-
-        // Note: Transcripts are stored in backend only, not in CloudKit
-        // CloudKit only stores session metadata for sync
     }
 
     // MARK: - Fetching Sessions

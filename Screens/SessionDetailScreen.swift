@@ -16,6 +16,7 @@ struct SessionDetailScreen: View {
     @State private var showShareSummary = false
     @State private var showShareTranscript = false
     @ObservedObject var appCoordinator = AppCoordinator.shared
+    @StateObject private var hybridLogger = HybridSessionLogger.shared
     
     var body: some View {
         ScrollView {
@@ -79,11 +80,14 @@ struct SessionDetailScreen: View {
                     if !turns.isEmpty {
                         TranscriptSection(turns: turns)
                     } else if let session = session {
-                        EmptyTranscriptView(isLoggingEnabled: session.loggingEnabledSnapshot)
+                        EmptyTranscriptView(session: session)
                     }
                 }
             }
             .padding()
+        }
+        .refreshable {
+            loadSessionDetails()
         }
         .navigationTitle("Session Details")
         .navigationBarTitleDisplayMode(.large)
@@ -168,7 +172,7 @@ struct SessionDetailScreen: View {
     private func deleteSession() {
         Task {
             do {
-                try await SessionLogger.shared.deleteSession(sessionID: sessionID)
+                try await hybridLogger.deleteSession(id: sessionID)
                 await MainActor.run {
                     appCoordinator.navigateBack()
                 }
@@ -178,6 +182,38 @@ struct SessionDetailScreen: View {
                 }
             }
         }
+    }
+
+    private func formatSummaryText(_ summary: SessionSummary) -> String {
+        var text = "\(summary.title)\n\n"
+        text += "\(summary.summaryText)\n"
+
+        if !summary.actionItems.isEmpty {
+            text += "\nAction Items:\n"
+            for item in summary.actionItems {
+                text += "• \(item)\n"
+            }
+        }
+
+        if !summary.tags.isEmpty {
+            text += "\nTags: \(summary.tags.joined(separator: ", "))\n"
+        }
+
+        return text
+    }
+
+    private func formatTranscriptText(_ turns: [Turn]) -> String {
+        turns.map { turn in
+            let timeStr = formatTime(turn.timestamp)
+            let speaker = turn.speaker == .user ? "You" : "Assistant"
+            return "[\(timeStr)] \(speaker): \(turn.text)"
+        }.joined(separator: "\n\n")
+    }
+
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
@@ -433,17 +469,23 @@ struct SessionMetadataSection: View {
 }
 
 struct EmptyTranscriptView: View {
-    let isLoggingEnabled: Bool
-    
+    let session: Session
+
+    private var message: String {
+        if session.endedAt == nil {
+            return "Transcript will appear as you talk. The conversation is still in progress."
+        } else {
+            return "We haven't received transcript turns yet. This can take a few moments after the call ends—pull to refresh if it takes longer than expected."
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Transcript")
                 .font(.title2)
                 .fontWeight(.bold)
-            
-            Text(isLoggingEnabled
-                 ? "We haven't received transcript turns yet. This can take a few moments after the call ends—pull to refresh if it takes longer than expected."
-                 : "Transcript history is unavailable because logging was disabled for this call.")
+
+            Text(message)
                 .font(.body)
                 .foregroundColor(.secondary)
         }
@@ -456,47 +498,17 @@ struct EmptyTranscriptView: View {
 
 struct TranscriptSection: View {
     let turns: [Turn]
-    @State private var showShareSheet = false
-
-    private var transcriptText: String {
-        turns.map { turn in
-            let timeStr = formatTime(turn.timestamp)
-            let speaker = turn.speaker == .user ? "You" : "Assistant"
-            return "[\(timeStr)] \(speaker): \(turn.text)"
-        }.joined(separator: "\n\n")
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Transcript")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Spacer()
-
-                Button(action: {
-                    showShareSheet = true
-                }) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.title3)
-                        .foregroundColor(.blue)
-                }
-            }
+            Text("Transcript")
+                .font(.title2)
+                .fontWeight(.bold)
 
             ForEach(turns) { turn in
                 TranscriptBubble(turn: turn)
             }
         }
-        .sheet(isPresented: $showShareSheet) {
-            ShareSheet(items: [transcriptText])
-        }
-    }
-
-    private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
     }
 }
 

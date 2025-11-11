@@ -95,6 +95,7 @@ class CloudKitSyncService: ObservableObject {
         record["context"] = session.context.rawValue as CKRecordValue
         record["loggingEnabledSnapshot"] = session.loggingEnabledSnapshot as CKRecordValue
         record["summaryStatus"] = session.summaryStatus.rawValue as CKRecordValue
+        record["durationMinutes"] = session.durationMinutes as CKRecordValue?
 
         return record
     }
@@ -111,6 +112,7 @@ class CloudKitSyncService: ObservableObject {
         }
 
         let endedAt = record["endedAt"] as? Date
+        let durationMinutes = record["durationMinutes"] as? Int
 
         return Session(
             id: record.recordID.recordName,
@@ -119,7 +121,8 @@ class CloudKitSyncService: ObservableObject {
             startedAt: startedAt,
             endedAt: endedAt,
             loggingEnabledSnapshot: loggingEnabledSnapshot,
-            summaryStatus: summaryStatus
+            summaryStatus: summaryStatus,
+            durationMinutes: durationMinutes
         )
     }
 

@@ -26,6 +26,8 @@ import fs from 'fs';
 import OpenAI from 'openai';
 import db, { usePostgres } from './database.js';
 import { generateRoomName, generateLiveKitToken, getLiveKitUrl, logLiveKitConfig, dispatchAgentToRoom } from './livekit.js';
+import iapRoutes from './routes/iap.js';
+import { checkEntitlement, incrementFreeTierUsage } from './middleware/entitlementCheck.js';
 
 // Log LiveKit configuration after env is loaded and modules are imported
 logLiveKitConfig();
@@ -35,6 +37,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// IAP routes
+app.use('/iap', iapRoutes);
 
 // Serve static voice preview files
 const previewsDir = path.join(__dirname, 'public', 'voice-previews');
@@ -279,6 +284,7 @@ const authenticateToken = (req, res, next) => {
   // In production, you would validate JWT tokens properly
   console.log(`✅ Auth token accepted: ${token.substring(0, 20)}...`);
   req.userId = 'user-' + Buffer.from(token).toString('base64').slice(0, 10);
+  req.deviceId = token;
   next();
 };
 
@@ -310,6 +316,20 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
 
     if (!context || !['phone', 'carplay'].includes(context)) {
       return res.status(400).json({ error: 'Invalid context' });
+    }
+
+    const deviceId = req.deviceId || req.headers['x-device-id'] || req.userId;
+
+    const entitlementCheck = await checkEntitlement(deviceId);
+
+    if (!entitlementCheck.allowed) {
+      console.log(`🚫 Session blocked for device ${deviceId.substring(0, 20)}... - ${entitlementCheck.reason}`);
+      return res.status(402).json({
+        error: 'ENTITLEMENT_REQUIRED',
+        message: 'Subscription required. Free tier limit reached (10 min/month).',
+        freeMinutesUsed: entitlementCheck.freeMinutesUsed,
+        freeMinutesLimit: entitlementCheck.freeMinutesLimit
+      });
     }
 
     const useRealtimeMode = realtime === true;
@@ -351,10 +371,18 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
 
     // Store session in database
     const stmt = db.prepare(`
-      INSERT INTO sessions (id, user_id, context, started_at, logging_enabled_snapshot, summary_status, model)
-      VALUES (?, ?, ?, ?, ${usePostgres ? 'true' : '1'}, 'pending', ?)
+      INSERT INTO sessions (id, user_id, context, started_at, logging_enabled_snapshot, summary_status, model, original_transaction_id, entitlement_checked_at)
+      VALUES (?, ?, ?, ?, ${usePostgres ? 'true' : '1'}, 'pending', ?, ?, ?)
     `);
-    await stmt.run(sessionId, req.userId, context, new Date().toISOString(), selectedModel);
+    await stmt.run(
+      sessionId,
+      req.userId,
+      context,
+      new Date().toISOString(),
+      selectedModel,
+      entitlementCheck.originalTransactionId || null,
+      new Date().toISOString()
+    );
 
     // Log configuration for debugging
     console.log(`Session ${sessionId} started in ${useRealtimeMode ? 'REALTIME' : 'TURN-BASED'} mode`);
@@ -366,7 +394,7 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
     }
 
     // Dispatch agent to room (don't wait for it, run in background)
-    dispatchAgentToRoom(roomName, selectedModel, selectedVoice, useRealtimeMode).catch(error => {
+    dispatchAgentToRoom(roomName, sessionId, selectedModel, selectedVoice, useRealtimeMode).catch(error => {
       console.error(`Failed to dispatch agent for session ${sessionId}:`, error.message);
     });
 
@@ -442,7 +470,7 @@ function getTierLimits(tier) {
 }
 
 // 2. POST /v1/sessions/end - End session
-app.post('/v1/sessions/end', authenticateToken, (req, res) => {
+app.post('/v1/sessions/end', authenticateToken, async (req, res) => {
   try {
     const { session_id, duration_minutes } = req.body;
 
@@ -450,17 +478,30 @@ app.post('/v1/sessions/end', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'Missing session_id' });
     }
 
+    const sessionStmt = db.prepare('SELECT original_transaction_id FROM sessions WHERE id = ? AND user_id = ?');
+    const session = await sessionStmt.get(session_id, req.userId);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
     // Update session with end time and duration
     const updateStmt = duration_minutes !== undefined
       ? db.prepare('UPDATE sessions SET ended_at = ?, duration_minutes = ? WHERE id = ? AND user_id = ?')
       : db.prepare('UPDATE sessions SET ended_at = ? WHERE id = ? AND user_id = ?');
-    
+
     const result = duration_minutes !== undefined
-      ? updateStmt.run(new Date().toISOString(), duration_minutes, session_id, req.userId)
-      : updateStmt.run(new Date().toISOString(), session_id, req.userId);
+      ? await updateStmt.run(new Date().toISOString(), duration_minutes, session_id, req.userId)
+      : await updateStmt.run(new Date().toISOString(), session_id, req.userId);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (!session.original_transaction_id && duration_minutes) {
+      const deviceId = req.deviceId || req.headers['x-device-id'] || req.userId;
+      await incrementFreeTierUsage(deviceId, duration_minutes);
+      console.log(`📊 Free tier usage incremented: ${duration_minutes} minutes for device ${deviceId.substring(0, 20)}...`);
     }
 
     res.status(204).send();
@@ -470,8 +511,8 @@ app.post('/v1/sessions/end', authenticateToken, (req, res) => {
   }
 });
 
-// 3. POST /v1/sessions/{id}/turns - Log conversation turn
-app.post('/v1/sessions/:id/turns', authenticateToken, (req, res) => {
+// 3. POST /v1/sessions/{id}/turns - Log conversation turn (no auth for agent)
+app.post('/v1/sessions/:id/turns', (req, res) => {
   try {
     const sessionId = req.params.id;
     const { speaker, text, timestamp } = req.body;
@@ -480,9 +521,9 @@ app.post('/v1/sessions/:id/turns', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'Invalid turn data' });
     }
 
-    // Verify session belongs to user
-    const session = db.prepare('SELECT id FROM sessions WHERE id = ? AND user_id = ?')
-      .get(sessionId, req.userId);
+    // Verify session exists (no user check since agent is calling this)
+    const session = db.prepare('SELECT id FROM sessions WHERE id = ?')
+      .get(sessionId);
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });

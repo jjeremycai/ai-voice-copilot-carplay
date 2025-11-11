@@ -6,29 +6,29 @@
 import SwiftUI
 
 struct SessionsListScreen: View {
-    @State private var sessions: [SessionListItem] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
+    @StateObject private var hybridLogger = HybridSessionLogger.shared
     @ObservedObject var appCoordinator = AppCoordinator.shared
     
     var body: some View {
         Group {
-            if isLoading {
+            if hybridLogger.isLoading {
                 ProgressView("Loading sessions...")
-            } else if let error = errorMessage {
+            } else if let error = hybridLogger.error {
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.largeTitle)
                         .foregroundColor(.orange)
-                    Text(error)
+                    Text(error.localizedDescription)
                         .foregroundColor(.secondary)
                     Button("Retry") {
-                        loadSessions()
+                        Task {
+                            await hybridLogger.loadSessions()
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                 }
                 .padding()
-            } else if sessions.isEmpty {
+            } else if hybridLogger.sessions.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "clock.badge.questionmark")
                         .font(.largeTitle)
@@ -41,7 +41,7 @@ struct SessionsListScreen: View {
                 }
                 .padding()
             } else {
-                List(sessions) { session in
+                List(hybridLogger.sessions) { session in
                     NavigationLink(value: session.id) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(session.title)
@@ -72,28 +72,8 @@ struct SessionsListScreen: View {
         .navigationDestination(for: String.self) { sessionID in
             SessionDetailScreen(sessionID: sessionID)
         }
-        .onAppear {
-            loadSessions()
-        }
-    }
-    
-    private func loadSessions() {
-        isLoading = true
-        errorMessage = nil
-
-        Task {
-            do {
-                let fetchedSessions = try await SessionLogger.shared.fetchSessions()
-                await MainActor.run {
-                    self.sessions = fetchedSessions
-                    self.isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    self.errorMessage = "Failed to load sessions: \(error.localizedDescription)"
-                    self.isLoading = false
-                }
-            }
+        .refreshable {
+            await hybridLogger.loadSessions()
         }
     }
 

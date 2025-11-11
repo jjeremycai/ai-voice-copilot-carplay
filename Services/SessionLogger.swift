@@ -160,34 +160,6 @@ class SessionLogger {
         let _: EmptyResponse = try handleResponse(data: data, response: response, decoder: decoder)
     }
     
-    func logTurn(sessionID: String, speaker: Turn.Speaker, text: String, timestamp: Date) {
-        // Only log if logging is enabled
-        guard settings.loggingEnabled else { return }
-        
-        // Fire-and-forget - don't block the call flow
-        Task {
-            do {
-                guard let url = URL(string: "\(configuration.apiBaseURL)/sessions/\(sessionID)/turns") else { return }
-                
-                var request = createAuthenticatedRequest(url: url, method: "POST")
-                
-                let formatter = ISO8601DateFormatter()
-                let body: [String: Any] = [
-                    "speaker": speaker.rawValue,
-                    "text": text,
-                    "timestamp": formatter.string(from: timestamp)
-                ]
-                
-                request.httpBody = try JSONSerialization.data(withJSONObject: body)
-                
-                _ = try await URLSession.shared.data(for: request)
-            } catch {
-                // Silently fail - logging should not interrupt the call
-                print("Failed to log turn: \(error)")
-            }
-        }
-    }
-    
     func fetchSessions() async throws -> [SessionListItem] {
         guard let url = URL(string: "\(configuration.apiBaseURL)/sessions") else {
             throw SessionLoggerError.invalidURL

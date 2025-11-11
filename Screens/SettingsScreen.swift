@@ -15,14 +15,86 @@ struct SettingsScreen: View {
     @State private var isLoadingUsage = false
     @State private var usageError: String?
     @StateObject private var hybridLogger = HybridSessionLogger.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     @State private var syncStatus: String?
     @State private var isRefreshing = false
     @State private var showRestoreSuccess = false
     @State private var showRestoreError = false
     @State private var restoreErrorMessage: String?
+    @State private var showPaywall = false
 
     var body: some View {
         Form {
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Status")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Text(subscriptionManager.state.displayStatus)
+                            .font(.body)
+                            .fontWeight(.semibold)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: subscriptionManager.state.isActive ? "checkmark.circle.fill" : "xmark.circle")
+                        .foregroundColor(subscriptionManager.state.isActive ? .green : .orange)
+                        .imageScale(.large)
+                }
+                .padding(.vertical, 4)
+
+                if let expiresAt = subscriptionManager.state.expiresAt {
+                    HStack {
+                        Text("Renews")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Spacer()
+
+                        Text(formatDate(expiresAt))
+                            .font(.caption)
+                    }
+                }
+
+                if subscriptionManager.state.status == .inactive {
+                    Button(action: {
+                        showPaywall = true
+                    }) {
+                        HStack {
+                            Image(systemName: "star.fill")
+                            Text("Upgrade to Pro")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    Button(action: {
+                        openSubscriptionManagement()
+                    }) {
+                        HStack {
+                            Image(systemName: "gearshape")
+                            Text("Manage Subscription")
+                        }
+                    }
+                }
+
+                Button(action: restoreSubscription) {
+                    HStack {
+                        Image(systemName: "arrow.clockwise")
+                        Text("Restore Purchases")
+                    }
+                }
+                .disabled(subscriptionManager.isLoading)
+            } header: {
+                Text("Subscription")
+            } footer: {
+                if subscriptionManager.state.status == .inactive {
+                    Text("Free users get 10 minutes per month. Upgrade to Pro for unlimited minutes.")
+                } else {
+                    Text("Manage your subscription or cancel anytime in App Store settings.")
+                }
+            }
             Section {
                 if isLoadingUsage {
                     HStack {
@@ -152,7 +224,7 @@ struct SettingsScreen: View {
                         .imageScale(.large)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("iCloud Sync")
+                        Text("Sync Status")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
 
@@ -185,7 +257,7 @@ struct SettingsScreen: View {
                 }
                 .disabled(isRefreshing || syncStatus?.contains("unavailable") == true)
             } header: {
-                Text("iCloud Sync")
+                Text("Cloud Backup")
             } footer: {
                 Text("Sessions automatically sync across all your devices signed into the same iCloud account. Use restore to manually fetch the latest data from iCloud.")
             }
@@ -194,7 +266,7 @@ struct SettingsScreen: View {
                 NavigationLink(destination: VoicePickerView(settings: settings)) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Voice")
+                            Text("Selected Voice")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             Text(settings.selectedVoice.name)
@@ -204,19 +276,19 @@ struct SettingsScreen: View {
                     }
                 }
             } header: {
-                Text("Voice")
+                Text("Assistant Voice")
             } footer: {
                 Text("Choose your preferred voice for the assistant. Tap the play button to preview each voice. Visit cartesia.ai/voices for more options.")
             }
 
             Section {
-                Picker("Delete After", selection: $settings.retentionDays) {
-                    Text("Never").tag(0)
-                    Text("7 days").tag(7)
-                    Text("30 days").tag(30)
-                    Text("90 days").tag(90)
-                    Text("180 days").tag(180)
-                    Text("365 days").tag(365)
+                Picker("Retention Period", selection: $settings.retentionDays) {
+                    Text("Never delete").tag(0)
+                    Text("Delete after 7 days").tag(7)
+                    Text("Delete after 30 days").tag(30)
+                    Text("Delete after 90 days").tag(90)
+                    Text("Delete after 180 days").tag(180)
+                    Text("Delete after 365 days").tag(365)
                 }
 
                 if settings.retentionDays == 0 {
@@ -229,7 +301,7 @@ struct SettingsScreen: View {
                         .foregroundColor(.secondary)
                 }
             } header: {
-                Text("Delete After")
+                Text("Data Retention")
             }
 
             Section {
@@ -280,6 +352,26 @@ struct SettingsScreen: View {
             loadUsageStats()
             await checkSyncStatus()
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+    }
+
+    private func openSubscriptionManagement() {
+        guard let url = URL(string: "https://apps.apple.com/account/subscriptions") else { return }
+        UIApplication.shared.open(url)
+    }
+
+    private func restoreSubscription() {
+        Task {
+            do {
+                try await subscriptionManager.restore()
+                showRestoreSuccess = true
+            } catch {
+                restoreErrorMessage = error.localizedDescription
+                showRestoreError = true
+            }
+        }
     }
 
     private func loadUsageStats() {
@@ -312,7 +404,7 @@ struct SettingsScreen: View {
     private func deleteAllSessions() {
         Task {
             do {
-                try await SessionLogger.shared.deleteAllSessions()
+                try await hybridLogger.deleteAllSessions()
                 await MainActor.run {
                     showDeleteSuccess = true
                 }

@@ -44,6 +44,11 @@
 		F9E8D7C6B5F4E9D8C7F2E6D3 /* SessionLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F9D8C6A5B4F3E9D8C1F7E4 /* SessionLoggerTests.swift */; };
 		96E063464E4D416BAE82EC13 /* HybridSessionLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A6D2EE242DA425281900EEA /* HybridSessionLogger.swift */; };
 		DF0819F8ED1C4FE18C56788D /* CloudKitSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29424058412245489CA329CA /* CloudKitSyncService.swift */; };
+		C2FC9EF0EBF6452690F587BF /* SubscriptionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F5943C283B404B89029CE0 /* SubscriptionState.swift */; };
+		7EC82C708D8F430B9BA81C05 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 829B55CB659A4D1EB73FFBE6 /* SubscriptionManager.swift */; };
+		D2A4A4E922E540E6970F7382 /* EntitlementsCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F0AD0C7FEA4A1C9C5B804C /* EntitlementsCache.swift */; };
+		9606A4FD17E64865A0E2CA25 /* IAPAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E3CCB8B87D473BAEDB0C38 /* IAPAPI.swift */; };
+		D6AEBBFBAA7C4BA88E7394B9 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17B3090761A4B06AEFC756F /* PaywallView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +111,11 @@
 		E7F9D8C6A5B4F3E9D8C1F7E4 /* SessionLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionLoggerTests.swift; sourceTree = "<group>"; };
 		EE42B9415312B56F7EA4DB3F /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		F8D9E7C6B5A4F3E8D9F2E7C5 /* AuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthServiceTests.swift; sourceTree = "<group>"; };
+		B3F5943C283B404B89029CE0 /* SubscriptionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionState.swift; sourceTree = "<group>"; };
+		829B55CB659A4D1EB73FFBE6 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
+		49F0AD0C7FEA4A1C9C5B804C /* EntitlementsCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementsCache.swift; sourceTree = "<group>"; };
+		E7E3CCB8B87D473BAEDB0C38 /* IAPAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPAPI.swift; sourceTree = "<group>"; };
+		F17B3090761A4B06AEFC756F /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -156,6 +166,9 @@
 				A9AEA20E2FF6F23D5382061B /* AuthService.swift */,
 				955C4F1C4DA930C652EC715E /* Configuration.swift */,
 				9ACA884917C34E0C8DEDA8FD /* VoicePreviewService.swift */,
+				829B55CB659A4D1EB73FFBE6 /* SubscriptionManager.swift */,
+				49F0AD0C7FEA4A1C9C5B804C /* EntitlementsCache.swift */,
+				E7E3CCB8B87D473BAEDB0C38 /* IAPAPI.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -169,6 +182,7 @@
 				6FB9C43A548091AD05A0CE38 /* SessionDetailScreen.swift */,
 				A79AD2CD15C369F5E45DDE03 /* SettingsScreen.swift */,
 				DE765871A2DC4733B411C8CB /* CallScreen.swift */,
+				F17B3090761A4B06AEFC756F /* PaywallView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -258,6 +272,7 @@
 				5F4B35EC9C1C4B6E70B04D67 /* Session.swift */,
 				EE42B9415312B56F7EA4DB3F /* UserSettings.swift */,
 				78DC8E30FF4444B1B6907FD4 /* VoiceModels.swift */,
+				B3F5943C283B404B89029CE0 /* SubscriptionState.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -431,6 +446,11 @@
 				214BE7CF0C7B4A119FEB7999 /* CallScreen.swift in Sources */,
 				4842ACCA0B0D43E4989ABC29 /* VoicePreviewService.swift in Sources */,
 				3AF7500883614872B893F60F /* VoiceModels.swift in Sources */,
+				C2FC9EF0EBF6452690F587BF /* SubscriptionState.swift in Sources */,
+				7EC82C708D8F430B9BA81C05 /* SubscriptionManager.swift in Sources */,
+				D2A4A4E922E540E6970F7382 /* EntitlementsCache.swift in Sources */,
+				9606A4FD17E64865A0E2CA25 /* IAPAPI.swift in Sources */,
+				D6AEBBFBAA7C4BA88E7394B9 /* PaywallView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

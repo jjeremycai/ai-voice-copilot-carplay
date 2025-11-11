@@ -23,6 +23,7 @@ class AssistantCallCoordinator: ObservableObject {
 
     private let callManager = CallManager.shared
     private let liveKitService = LiveKitService.shared
+    private let cloudKit = CloudKitSyncService.shared
     private let sessionLogger = SessionLogger.shared
     private let appCoordinator = AppCoordinator.shared
     private var cancellables = Set<AnyCancellable>()
@@ -82,11 +83,21 @@ class AssistantCallCoordinator: ObservableObject {
         // End CallKit call
         callManager.endCurrentCall()
 
-        // End session on backend
+        // End session on backend and sync to CloudKit
         if let sessionID = currentSessionID {
             Task {
                 do {
                     try await sessionLogger.endSession(sessionID: sessionID, durationMinutes: durationMinutes)
+
+                    // Update in CloudKit if available
+                    if await cloudKit.isICloudAvailable(),
+                       let session = try? await cloudKit.fetchSession(id: sessionID) {
+                        var updatedSession = session
+                        updatedSession.endedAt = Date()
+                        updatedSession.durationMinutes = durationMinutes
+
+                        try? await cloudKit.saveSession(updatedSession)
+                    }
 
                     // Nothing else to do here - navigation already happened
                 } catch {
@@ -117,6 +128,20 @@ class AssistantCallCoordinator: ObservableObject {
             do {
                 // Start session and get LiveKit credentials
                 let response = try await sessionLogger.startSession(context: context)
+
+                // Sync to CloudKit if available
+                if await cloudKit.isICloudAvailable() {
+                    let session = Session(
+                        id: response.sessionId,
+                        userId: "", // Will be set from backend response or iCloud user ID
+                        context: context,
+                        startedAt: Date(),
+                        endedAt: nil,
+                        loggingEnabledSnapshot: UserSettings.shared.loggingEnabled,
+                        summaryStatus: .pending
+                    )
+                    try? await cloudKit.saveSession(session)
+                }
 
                 // Connect to LiveKit
                 await MainActor.run {
@@ -175,6 +200,9 @@ extension AssistantCallCoordinator: LiveKitServiceDelegate {
     
     func liveKitServiceDidFail(error: Error) {
         // If LiveKit fails, end the call
+        print("❌ LiveKit service failed with error: \(error)")
+        print("❌ Error type: \(type(of: error))")
+        print("❌ Error description: \(error.localizedDescription)")
         errorMessage = "Connection failed: \(error.localizedDescription)"
         endAssistantCall()
     }
