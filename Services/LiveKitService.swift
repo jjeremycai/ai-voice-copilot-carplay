@@ -23,6 +23,11 @@ final class LiveKitService: @unchecked Sendable {
     private var sessionId: String?
     private var room: Room?
 
+    private var accumulatedUserText: String = ""
+    private var accumulatedAssistantText: String = ""
+    private var lastSpeaker: Turn.Speaker?
+    private var turnAccumulationTimer: Timer?
+
     private init() {}
 
     func connect(sessionID: String, url: String, token: String) {
@@ -57,6 +62,11 @@ final class LiveKitService: @unchecked Sendable {
     func disconnect() {
         Task { @MainActor [weak self] in
             guard let self = self, let room = self.room else { return }
+
+            self.turnAccumulationTimer?.invalidate()
+            self.turnAccumulationTimer = nil
+
+            self.flushAccumulatedText()
 
             await room.disconnect()
             self.room = nil
@@ -103,20 +113,63 @@ final class LiveKitService: @unchecked Sendable {
     }
 
     private func handleTranscriptionText(_ text: String, participantIdentity: Participant.Identity, sessionID: String) async {
-        // Determine speaker (user or assistant) based on participant identity
-        // Participant.Identity is a String, so we can use contains directly
         let identityString = participantIdentity.stringValue
         let speaker: Turn.Speaker = identityString.contains("agent") ? .assistant : .user
 
-        print("📝 Transcription [\(speaker.rawValue)]: \(text)")
+        print("📝 Transcription chunk [\(speaker.rawValue)]: \(text)")
 
-        // Log the turn to backend
-        SessionLogger.shared.logTurn(
-            sessionID: sessionID,
-            speaker: speaker,
-            text: text,
-            timestamp: Date()
-        )
+        await MainActor.run {
+            if speaker != lastSpeaker && lastSpeaker != nil {
+                flushAccumulatedText()
+            }
+
+            lastSpeaker = speaker
+
+            if speaker == .user {
+                if !accumulatedUserText.isEmpty {
+                    accumulatedUserText += " "
+                }
+                accumulatedUserText += text
+            } else {
+                if !accumulatedAssistantText.isEmpty {
+                    accumulatedAssistantText += " "
+                }
+                accumulatedAssistantText += text
+            }
+
+            turnAccumulationTimer?.invalidate()
+            turnAccumulationTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+                self?.flushAccumulatedText()
+            }
+        }
+    }
+
+    private func flushAccumulatedText() {
+        guard let sessionID = sessionId else { return }
+
+        if !accumulatedUserText.isEmpty {
+            print("📝 Logging complete user turn: \(accumulatedUserText)")
+            SessionLogger.shared.logTurn(
+                sessionID: sessionID,
+                speaker: .user,
+                text: accumulatedUserText,
+                timestamp: Date()
+            )
+            accumulatedUserText = ""
+        }
+
+        if !accumulatedAssistantText.isEmpty {
+            print("📝 Logging complete assistant turn: \(accumulatedAssistantText)")
+            SessionLogger.shared.logTurn(
+                sessionID: sessionID,
+                speaker: .assistant,
+                text: accumulatedAssistantText,
+                timestamp: Date()
+            )
+            accumulatedAssistantText = ""
+        }
+
+        lastSpeaker = nil
     }
 
     private func handleReconnection() {

@@ -65,6 +65,34 @@ const normalizeSession = (session) => {
   };
 };
 
+const normalizeSummary = (summary) => {
+  if (!summary) return null;
+
+  const normalized = { ...summary };
+
+  // Parse JSON fields
+  try {
+    normalized.action_items = JSON.parse(summary.action_items);
+  } catch {
+    normalized.action_items = [];
+  }
+
+  try {
+    normalized.tags = JSON.parse(summary.tags);
+  } catch {
+    normalized.tags = [];
+  }
+
+  // Convert PostgreSQL timestamp to ISO8601
+  // PostgreSQL returns: "2025-11-11 18:14:20"
+  // Swift expects: "2025-11-11T18:14:20Z"
+  if (normalized.created_at && typeof normalized.created_at === 'string') {
+    normalized.created_at = normalized.created_at.replace(' ', 'T') + 'Z';
+  }
+
+  return normalized;
+};
+
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -518,21 +546,8 @@ app.get('/v1/sessions/:id', authenticateToken, (req, res) => {
 
     // Fetch summary if it exists
     const summaryStmt = db.prepare('SELECT * FROM summaries WHERE session_id = ?');
-    const summary = summaryStmt.get(sessionId);
-
-    if (summary) {
-      try {
-        summary.action_items = JSON.parse(summary.action_items);
-      } catch {
-        summary.action_items = [];
-      }
-
-      try {
-        summary.tags = JSON.parse(summary.tags);
-      } catch {
-        summary.tags = [];
-      }
-    }
+    const summaryRow = summaryStmt.get(sessionId);
+    const summary = normalizeSummary(summaryRow);
 
     // Always return turns, even if empty
     const turns = db.prepare(`
@@ -594,16 +609,14 @@ app.get('/v1/sessions/:id/summary', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    const summary = db.prepare('SELECT * FROM summaries WHERE session_id = ?')
+    const summaryRow = db.prepare('SELECT * FROM summaries WHERE session_id = ?')
       .get(sessionId);
 
-    if (!summary) {
+    if (!summaryRow) {
       return res.status(404).json({ error: 'Summary not found' });
     }
 
-    // Parse JSON arrays
-    summary.action_items = JSON.parse(summary.action_items);
-    summary.tags = JSON.parse(summary.tags);
+    const summary = normalizeSummary(summaryRow);
 
     res.json(summary);
   } catch (error) {

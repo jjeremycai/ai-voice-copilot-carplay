@@ -43,7 +43,26 @@ struct SessionsListScreen: View {
             } else {
                 List(sessions) { session in
                     NavigationLink(value: session.id) {
-                        SessionRow(session: session) {}
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(session.title)
+                                .font(.headline)
+
+                            if !session.summarySnippet.isEmpty {
+                                Text(session.summarySnippet)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+
+                            HStack {
+                                Image(systemName: "clock")
+                                    .font(.caption)
+                                Text(formatDate(session.startedAt))
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
                     }
                 }
             }
@@ -61,7 +80,7 @@ struct SessionsListScreen: View {
     private func loadSessions() {
         isLoading = true
         errorMessage = nil
-        
+
         Task {
             do {
                 let fetchedSessions = try await SessionLogger.shared.fetchSessions()
@@ -77,39 +96,7 @@ struct SessionsListScreen: View {
             }
         }
     }
-}
 
-struct SessionRow: View {
-    let session: SessionListItem
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(session.title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                
-                if !session.summarySnippet.isEmpty {
-                    Text(session.summarySnippet)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-                
-                HStack {
-                    Image(systemName: "clock")
-                        .font(.caption)
-                    Text(formatDate(session.startedAt))
-                        .font(.caption)
-                }
-                .foregroundColor(.secondary)
-            }
-            .padding(.vertical, 4)
-        }
-        .buttonStyle(.plain)
-    }
-    
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium

@@ -15,22 +15,11 @@ struct Session: Identifiable, Codable {
     var summaryStatus: SummaryStatus
     var durationMinutes: Int?
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case context
-        case startedAt = "started_at"
-        case endedAt = "ended_at"
-        case loggingEnabledSnapshot = "logging_enabled_snapshot"
-        case summaryStatus = "summary_status"
-        case durationMinutes = "duration_minutes"
-    }
-    
     enum SessionContext: String, Codable {
         case carplay
         case phone
     }
-    
+
     enum SummaryStatus: String, Codable {
         case pending
         case ready

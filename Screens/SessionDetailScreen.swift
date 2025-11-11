@@ -13,6 +13,8 @@ struct SessionDetailScreen: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showDeleteConfirmation = false
+    @State private var showShareSummary = false
+    @State private var showShareTranscript = false
     @ObservedObject var appCoordinator = AppCoordinator.shared
     
     var body: some View {
@@ -88,6 +90,24 @@ struct SessionDetailScreen: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
+                    if summary != nil {
+                        Button(action: {
+                            showShareSummary = true
+                        }) {
+                            Label("Share Summary", systemImage: "square.and.arrow.up")
+                        }
+                    }
+
+                    if !turns.isEmpty {
+                        Button(action: {
+                            showShareTranscript = true
+                        }) {
+                            Label("Copy Transcript", systemImage: "doc.on.clipboard")
+                        }
+                    }
+
+                    Divider()
+
                     Button(role: .destructive, action: {
                         showDeleteConfirmation = true
                     }) {
@@ -97,6 +117,14 @@ struct SessionDetailScreen: View {
                     Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+        .sheet(isPresented: $showShareSummary) {
+            if let summary = summary {
+                ShareSheet(items: [formatSummaryText(summary)])
+            }
+        }
+        .sheet(isPresented: $showShareTranscript) {
+            ShareSheet(items: [formatTranscriptText(turns)])
         }
         .alert("Delete Session", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -396,12 +424,6 @@ struct SessionMetadataSection: View {
                         .foregroundColor(.secondary)
                 }
 
-                HStack {
-                    Image(systemName: session.loggingEnabledSnapshot ? "checkmark.shield" : "nosign")
-                    Text(session.loggingEnabledSnapshot ? "Logging enabled" : "Logging disabled")
-                }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
             }
         }
         .padding()
