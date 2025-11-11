@@ -26,11 +26,13 @@ struct MainAppView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeScreen()
-                .tabItem {
-                    Label("Home", systemImage: "house.fill")
-                }
-                .tag(0)
+            NavigationStack {
+                CallScreen()
+            }
+            .tabItem {
+                Label("Call", systemImage: "phone.fill")
+            }
+            .tag(0)
             
             NavigationStack(path: $appCoordinator.navigationPath) {
                 SessionsListScreen()
