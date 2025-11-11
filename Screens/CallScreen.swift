@@ -306,30 +306,35 @@ struct ModelPickerView: View {
 
     var body: some View {
         List {
-            ForEach(AIModel.allCases, id: \.self) { model in
-                Button {
-                    settings.selectedModel = model
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(model.displayName)
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            Text(model.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+            ForEach(AIModelProvider.allCases, id: \.self) { provider in
+                let models = AIModel.models(for: provider)
+                Section(provider.displayName) {
+                    ForEach(models, id: \.self) { model in
+                        Button {
+                            settings.selectedModel = model
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(model.displayName)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Text(model.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
 
-                        Spacer()
+                                Spacer()
 
-                        if settings.selectedModel == model {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
+                                if settings.selectedModel == model {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
                     }
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
             }
         }
         .navigationTitle("AI Model")
