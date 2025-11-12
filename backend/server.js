@@ -27,8 +27,7 @@ import OpenAI from 'openai';
 import db, { usePostgres } from './database.js';
 import { generateRoomName, generateLiveKitToken, getLiveKitUrl, logLiveKitConfig, dispatchAgentToRoom } from './livekit.js';
 import iapRoutes from './routes/iap.js';
-import { checkEntitlement, incrementFreeTierUsage } from './middleware/entitlementCheck.js';
-import { FREE_TIER_MINUTES } from './middleware/entitlementCheck.js';
+import { checkEntitlement, incrementFreeTierUsage, FREE_TIER_MINUTES } from './middleware/entitlementCheck.js';
 
 // Log LiveKit configuration after env is loaded and modules are imported
 logLiveKitConfig();
