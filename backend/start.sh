@@ -79,22 +79,48 @@ except Exception as e:
 # Start both the web server and agent worker
 echo "🚀 Starting web server and agent worker..."
 
+# Verify LiveKit environment variables are set
+echo "🔍 Verifying LiveKit environment variables..."
+if [ -z "$LIVEKIT_URL" ] || [ -z "$LIVEKIT_API_KEY" ] || [ -z "$LIVEKIT_API_SECRET" ]; then
+  echo "❌ ERROR: LiveKit environment variables are not set!"
+  echo "   Required: LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET"
+  echo "   Please set these in Railway dashboard or .env file"
+  exit 1
+fi
+echo "✅ LiveKit environment variables are set"
+
 # Start agent worker in background using virtual environment
 echo "🚀 Starting agent worker..."
+cd "$(dirname "$0")" || exit 1  # Ensure we're in the backend directory
 $PYTHON_CMD agent.py start > /tmp/agent.log 2>&1 &
 AGENT_PID=$!
 echo "✅ Agent worker process started (PID: $AGENT_PID)"
+echo "   Logs: /tmp/agent.log"
 
-# Wait a moment to check if agent started successfully
-sleep 3
+# Wait for agent to initialize and connect
+echo "⏳ Waiting for agent worker to connect to LiveKit Cloud..."
+sleep 5
+
+# Check if agent process is still running
 if ! kill -0 $AGENT_PID 2>/dev/null; then
-  echo "❌ Agent worker failed to start. Last 20 lines of agent.log:"
-  tail -20 /tmp/agent.log 2>/dev/null || echo "   (log file not found)"
+  echo "❌ Agent worker process died. Last 30 lines of agent.log:"
+  tail -30 /tmp/agent.log 2>/dev/null || echo "   (log file not found)"
   echo ""
   echo "❌ Exiting due to agent worker failure"
   exit 1
 fi
+
+# Check agent logs for connection success indicators
+if grep -q "Connecting to LiveKit Cloud\|agent worker\|Agent name: agent" /tmp/agent.log 2>/dev/null; then
+  echo "✅ Agent worker appears to be connecting (checking logs...)"
+else
+  echo "⚠️  Warning: Agent worker logs don't show expected connection messages"
+  echo "   Last 20 lines of agent.log:"
+  tail -20 /tmp/agent.log 2>/dev/null || echo "   (log file not found)"
+fi
+
 echo "✅ Agent worker is running (PID: $AGENT_PID)"
+echo "   Monitor logs with: tail -f /tmp/agent.log"
 
 # Start web server in foreground
 echo "✅ Starting web server..."

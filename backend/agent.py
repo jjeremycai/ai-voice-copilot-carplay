@@ -1,5 +1,6 @@
 import os
 import logging
+import sys
 import aiohttp
 from dotenv import load_dotenv
 from livekit import agents
@@ -9,9 +10,35 @@ from livekit.plugins import openai
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with more detail
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 logger = logging.getLogger(__name__)
+
+# Verify required environment variables
+def verify_env():
+    """Verify that required environment variables are set"""
+    required_vars = {
+        'LIVEKIT_URL': os.getenv('LIVEKIT_URL'),
+        'LIVEKIT_API_KEY': os.getenv('LIVEKIT_API_KEY'),
+        'LIVEKIT_API_SECRET': os.getenv('LIVEKIT_API_SECRET'),
+    }
+    
+    missing = [var for var, value in required_vars.items() if not value]
+    if missing:
+        logger.error(f"❌ Missing required environment variables: {', '.join(missing)}")
+        logger.error("   The agent worker cannot connect to LiveKit Cloud without these variables.")
+        return False
+    
+    logger.info("✅ All required environment variables are set")
+    logger.info(f"   LIVEKIT_URL: {os.getenv('LIVEKIT_URL')}")
+    logger.info(f"   LIVEKIT_API_KEY: {os.getenv('LIVEKIT_API_KEY')[:6]}...")
+    return True
 
 # Backend API configuration
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://shaw.up.railway.app')
@@ -120,7 +147,14 @@ async def save_turn(session_id: str, speaker: str, text: str):
 
 async def entrypoint(ctx: agents.JobContext):
     """Entry point for the LiveKit agent - supports both Realtime and Turn-based modes"""
-    logger.info(f"🎙️  Agent joining room: {ctx.room.name}")
+    logger.info("=" * 60)
+    logger.info(f"🎙️  Agent entrypoint called for room: {ctx.room.name}")
+    logger.info(f"   Room SID: {ctx.room.sid}")
+    logger.info(f"   Job ID: {ctx.job.id}")
+    logger.info("=" * 60)
+    
+    # Note: Room is NOT connected yet - AgentSession.start() will connect automatically
+    # RoomIO will automatically handle track subscription when AgentSession starts
 
     # Parse metadata from dispatch
     import json
@@ -170,11 +204,25 @@ async def entrypoint(ctx: agents.JobContext):
                 if session_id and msg.content:
                     await save_turn(session_id, "assistant", msg.content)
 
+            # Configure room input options
+            # RoomIO (created automatically by AgentSession) handles track subscription
+            room_input_options = RoomInputOptions()
+            logger.info("🎤 Starting full Realtime agent session...")
+            logger.info("   RoomIO will automatically subscribe to audio tracks")
+            
             await agent_session.start(
                 room=ctx.room,
                 agent=Assistant(tool_calling_enabled=tool_calling_enabled, web_search_enabled=web_search_enabled),
-                room_input_options=RoomInputOptions(),
+                room_input_options=room_input_options,
             )
+            
+            # Now that we're connected, log participants and tracks
+            logger.info("✅ Agent session started - room connected")
+            logger.info(f"👥 Participants in room: {len(ctx.room.remote_participants)}")
+            for participant in ctx.room.remote_participants.values():
+                logger.info(f"   - {participant.identity} (SID: {participant.sid})")
+                for track_pub in participant.track_publications.values():
+                    logger.info(f"     Track: {track_pub.name} ({track_pub.kind}) - subscribed: {track_pub.subscribed}")
 
             await agent_session.generate_reply(
                 instructions="Greet the driver briefly in English and ask how you can help them."
@@ -209,11 +257,25 @@ async def entrypoint(ctx: agents.JobContext):
                 if session_id and msg.content:
                     await save_turn(session_id, "assistant", msg.content)
 
+            # Configure room input options
+            # RoomIO (created automatically by AgentSession) handles track subscription
+            room_input_options = RoomInputOptions()
+            logger.info("🎤 Starting hybrid agent session...")
+            logger.info("   RoomIO will automatically subscribe to audio tracks")
+            
             await agent_session.start(
                 room=ctx.room,
                 agent=Assistant(tool_calling_enabled=tool_calling_enabled, web_search_enabled=web_search_enabled),
-                room_input_options=RoomInputOptions(),
+                room_input_options=room_input_options,
             )
+            
+            # Now that we're connected, log participants and tracks
+            logger.info("✅ Hybrid agent session started - room connected")
+            logger.info(f"👥 Participants in room: {len(ctx.room.remote_participants)}")
+            for participant in ctx.room.remote_participants.values():
+                logger.info(f"   - {participant.identity} (SID: {participant.sid})")
+                for track_pub in participant.track_publications.values():
+                    logger.info(f"     Track: {track_pub.name} ({track_pub.kind}) - subscribed: {track_pub.subscribed}")
 
             await agent_session.generate_reply(
                 instructions="Greet the driver briefly in English and ask how you can help them."
@@ -226,10 +288,34 @@ async def entrypoint(ctx: agents.JobContext):
         raise
 
 if __name__ == "__main__":
-    # Start the agent worker with explicit dispatch support
-    agents.cli.run_app(
-        agents.WorkerOptions(
-            entrypoint_fnc=entrypoint,
-            agent_name="agent",  # Required for explicit dispatch
-        ),
-    )
+    logger.info("=" * 60)
+    logger.info("🚀 Starting LiveKit Agent Worker")
+    logger.info("=" * 60)
+    
+    # Verify environment variables before starting
+    if not verify_env():
+        logger.error("❌ Environment verification failed. Exiting.")
+        sys.exit(1)
+    
+    # Log agent configuration
+    logger.info(f"📋 Agent name: agent")
+    logger.info(f"📋 Entrypoint: entrypoint")
+    logger.info("=" * 60)
+    logger.info("🔌 Connecting to LiveKit Cloud...")
+    logger.info("   The agent will listen for dispatches and join rooms as needed.")
+    logger.info("=" * 60)
+    
+    try:
+        # Start the agent worker with explicit dispatch support
+        agents.cli.run_app(
+            agents.WorkerOptions(
+                entrypoint_fnc=entrypoint,
+                agent_name="agent",  # Required for explicit dispatch - must match dispatch call
+            ),
+        )
+    except KeyboardInterrupt:
+        logger.info("🛑 Agent worker stopped by user")
+    except Exception as e:
+        logger.error(f"❌ Agent worker failed to start: {e}")
+        logger.exception("Full error details:")
+        sys.exit(1)
