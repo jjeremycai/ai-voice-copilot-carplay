@@ -151,7 +151,11 @@ async function generateSummaryAndTitle(sessionId) {
       max_completion_tokens: 500
     });
 
-    const summaryText = summaryResponse.choices[0].message.content;
+    const summaryText = summaryResponse.choices[0]?.message?.content;
+    if (!summaryText) {
+      console.error('❌ GPT-5-nano returned empty summary:', JSON.stringify(summaryResponse, null, 2));
+      throw new Error('GPT-5-nano returned empty summary content');
+    }
 
     // Extract action items
     const actionItemsResponse = await openai.chat.completions.create({
