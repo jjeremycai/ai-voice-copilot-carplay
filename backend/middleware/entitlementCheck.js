@@ -1,6 +1,6 @@
 import db from '../database.js';
 
-const FREE_TIER_MINUTES = 15;
+export const FREE_TIER_MINUTES = 15;
 
 export async function checkEntitlement(deviceId) {
   const now = new Date();
