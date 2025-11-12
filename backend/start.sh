@@ -1,8 +1,20 @@
 #!/bin/bash
-# Simplified startup - Node.js server only
-# Python agent can be added later as separate service
 
-set -e
+# Start both the web server and agent worker
+echo "🚀 Starting web server and agent worker..."
 
-echo "🚀 Starting Node.js server..."
-exec npm start
+# Start agent worker in background
+python agent.py &
+AGENT_PID=$!
+echo "✅ Agent worker started (PID: $AGENT_PID)"
+
+# Start web server in foreground
+npm start &
+WEB_PID=$!
+echo "✅ Web server started (PID: $WEB_PID)"
+
+# Wait for both processes
+wait -n
+
+# Exit with status of process that exited first
+exit $?

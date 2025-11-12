@@ -1,2 +1,1 @@
-web: npm start
-agent: python agent.py start
+web: bash start.sh
