@@ -1,0 +1,19 @@
+# Nixpacks configuration for Python Agent Service
+# This is for a separate Railway service that runs ONLY the Python agent
+
+[phases.setup]
+nixPkgs = ['python311', 'python311Packages.pip', 'python311Packages.virtualenv', 'stdenv.cc.cc.lib', 'gcc']
+
+[phases.install]
+cmds = [
+  'python3 -m venv /opt/venv',
+  '/opt/venv/bin/pip install --upgrade pip',
+  '/opt/venv/bin/pip install -r requirements.txt',
+  'echo "🔍 Verifying library installation..."',
+  'find /nix/store -name "libstdc++.so.6" 2>/dev/null | head -3 || echo "⚠️  libstdc++.so.6 not found in /nix/store"',
+  'ls -la /root/.nix-profile/lib/libstdc++* 2>/dev/null || echo "⚠️  libstdc++ not found in /root/.nix-profile/lib"'
+]
+
+[start]
+cmd = 'bash start-agent.sh'
+
