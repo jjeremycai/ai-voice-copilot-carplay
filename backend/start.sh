@@ -43,9 +43,23 @@ else
   echo "   LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-<not set>}"
 fi
 
+# Find Python executable (works with both Nixpacks and Metal)
+PYTHON_CMD=""
+if [ -f "/opt/venv/bin/python" ]; then
+  PYTHON_CMD="/opt/venv/bin/python"
+elif [ -f "backend/venv/bin/python" ]; then
+  PYTHON_CMD="backend/venv/bin/python"
+elif command -v python3 &> /dev/null; then
+  PYTHON_CMD="python3"
+else
+  PYTHON_CMD="python"
+fi
+
+echo "🔍 Using Python: $PYTHON_CMD"
+
 # Verify Python can find the library (non-fatal, for debugging)
 echo "🔍 Verifying Python library dependencies..."
-/opt/venv/bin/python -c "
+$PYTHON_CMD -c "
 import sys
 import os
 print(f'Python: {sys.executable}')
@@ -63,7 +77,7 @@ echo "🚀 Starting web server and agent worker..."
 
 # Start agent worker in background using virtual environment
 echo "🚀 Starting agent worker..."
-/opt/venv/bin/python agent.py start > /tmp/agent.log 2>&1 &
+$PYTHON_CMD agent.py start > /tmp/agent.log 2>&1 &
 AGENT_PID=$!
 echo "✅ Agent worker process started (PID: $AGENT_PID)"
 
