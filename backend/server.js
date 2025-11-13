@@ -342,14 +342,15 @@ app.get('/health/agent', async (req, res) => {
     try {
       // Try to connect to LiveKit to verify credentials work
       const { RoomServiceClient, AgentDispatchClient } = await import('livekit-server-sdk');
+      const apiUrl = (process.env.LIVEKIT_URL || '').replace('wss://', 'https://').replace('ws://', 'http://');
       const roomService = new RoomServiceClient(
-        process.env.LIVEKIT_URL,
+        apiUrl,
         process.env.LIVEKIT_API_KEY,
         process.env.LIVEKIT_API_SECRET
       );
       
       const agentDispatchClient = new AgentDispatchClient(
-        process.env.LIVEKIT_URL,
+        apiUrl,
         process.env.LIVEKIT_API_KEY,
         process.env.LIVEKIT_API_SECRET
       );
@@ -460,7 +461,7 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
       'google/gemini-2.5-pro'
     ];
 
-    const selectedModel = !useRealtimeMode && model && validModels.includes(model) ? model : null;
+    const selectedModel = useRealtimeMode ? null : (model && validModels.includes(model) ? model : 'openai/gpt-4.1-mini');
 
     // Check if user is trying to use a Pro-only model without Pro subscription
     if (selectedModel && proOnlyModels.includes(selectedModel)) {
@@ -502,7 +503,7 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
     if (useRealtimeMode) {
       console.log(`  OpenAI Realtime voice: ${selectedVoice}`);
     } else {
-      console.log(`  Model: ${selectedModel || 'openai/gpt-5-nano'}`);
+      console.log(`  Model: ${selectedModel}`);
       console.log(`  TTS voice: ${selectedVoice}`);
     }
 
@@ -526,7 +527,7 @@ app.post('/v1/sessions/start', authenticateToken, async (req, res) => {
       livekit_token: livekitToken,
       room_name: roomName,
       mode: useRealtimeMode ? 'realtime' : 'hybrid',
-      model: selectedModel || (useRealtimeMode ? 'openai-realtime' : 'openai/gpt-5-nano'),
+      model: selectedModel || (useRealtimeMode ? 'openai-realtime' : 'openai/gpt-4.1-mini'),
       voice: selectedVoice
     });
   } catch (error) {

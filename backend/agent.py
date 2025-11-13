@@ -6,7 +6,7 @@ import aiohttp
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions, function_tool, RunContext
-from livekit.plugins import openai
+from livekit.plugins import openai, cartesia, elevenlabs
 
 # Load environment variables from .env file
 load_dotenv()
@@ -122,6 +122,65 @@ class Assistant(Agent):
             logger.error(f"❌ Web search error: {e}")
             return "Search is temporarily unavailable."
 
+def create_tts_from_voice_descriptor(voice_descriptor: str):
+    """Create a TTS instance from a voice descriptor string.
+    
+    Supports:
+    - Cartesia: "cartesia/sonic-3:voice-id" -> cartesia.TTS()
+    - ElevenLabs: "elevenlabs/eleven_turbo_v2_5:voice-id" -> (fallback to LiveKit Inference)
+    - Other formats: fallback to LiveKit Inference
+    
+    Returns a TTS instance or the original string descriptor for LiveKit Inference fallback.
+    """
+    if not voice_descriptor or not isinstance(voice_descriptor, str):
+        return voice_descriptor
+    
+    # Parse Cartesia format: "cartesia/sonic-3:voice-id"
+    if voice_descriptor.startswith("cartesia/"):
+        try:
+            # Extract model and voice ID
+            # Format: "cartesia/sonic-3:voice-id"
+            parts = voice_descriptor.split(":", 1)
+            if len(parts) == 2:
+                model_part = parts[0]  # "cartesia/sonic-3"
+                voice_id = parts[1]     # "voice-id"
+                
+                # Extract model name (e.g., "sonic-3" from "cartesia/sonic-3")
+                model = model_part.split("/")[-1] if "/" in model_part else "sonic-3"
+                
+                # Check if Cartesia API key is available
+                if os.getenv('CARTESIA_API_KEY'):
+                    logger.info(f"🎤 Using Cartesia plugin directly (bypasses LiveKit Inference TTS limit)")
+                    return cartesia.TTS(model=model, voice=voice_id)
+                else:
+                    logger.warning(f"⚠️  CARTESIA_API_KEY not set, falling back to LiveKit Inference")
+                    return voice_descriptor
+            else:
+                logger.warning(f"⚠️  Invalid Cartesia voice format: {voice_descriptor}")
+                return voice_descriptor
+        except Exception as e:
+            logger.error(f"❌ Error creating Cartesia TTS: {e}")
+            return voice_descriptor
+    
+    if voice_descriptor.startswith("elevenlabs/"):
+        try:
+            parts = voice_descriptor.split(":", 1)
+            if len(parts) == 2:
+                model_part = parts[0]
+                voice_id = parts[1]
+                model = model_part.split("/")[-1] if "/" in model_part else "eleven_turbo_v2_5"
+                if os.getenv('ELEVENLABS_API_KEY'):
+                    return elevenlabs.TTS(model=model, voice=voice_id)
+                else:
+                    return voice_descriptor
+            else:
+                return voice_descriptor
+        except Exception as e:
+            logger.error(f"❌ Error creating ElevenLabs TTS: {e}")
+            return voice_descriptor
+
+    return voice_descriptor
+
 async def save_turn(session_id: str, speaker: str, text: str):
     """Save a conversation turn to the backend database
     
@@ -186,7 +245,7 @@ async def entrypoint(ctx: agents.JobContext):
 
     realtime_mode = metadata.get('realtime', False)  # Backend sends true for full Realtime, false for hybrid
     voice = metadata.get('voice', 'cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc')
-    model = metadata.get('model', 'openai/gpt-5-mini')
+    model = metadata.get('model', 'openai/gpt-4.1-mini')
     tool_calling_enabled = metadata.get('tool_calling_enabled', True)
     web_search_enabled = metadata.get('web_search_enabled', True)
 
@@ -246,7 +305,7 @@ async def entrypoint(ctx: agents.JobContext):
 
             logger.info("✅ Full Realtime agent session started successfully")
         else:
-            # Hybrid mode: LiveKit Inference LLM + TTS (Cartesia/ElevenLabs via LiveKit Inference)
+            # Hybrid mode: LiveKit Inference LLM + TTS (Cartesia/ElevenLabs via plugin or LiveKit Inference)
             logger.info(f"💰 Using HYBRID mode: LiveKit Inference LLM + {voice}")
             logger.info(f"📢 LLM model: {model}")
             logger.info(f"📢 TTS voice: {voice}")
@@ -254,13 +313,21 @@ async def entrypoint(ctx: agents.JobContext):
             # Use LiveKit Inference for LLM (not OpenAI Realtime)
             # Model format: "openai/gpt-5-mini", "openai/gpt-4.1-mini", etc.
             # LiveKit Inference handles the connection automatically
-            llm_model = model or "openai/gpt-5-mini"
+            llm_model = model or "openai/gpt-4.1-mini"
 
-            # AgentSession with LiveKit Inference LLM + TTS
-            # TTS voice format: "cartesia/sonic-3:..." or "elevenlabs/eleven_turbo_v2_5:..."
+            # Create TTS instance - use plugin if available (bypasses LiveKit Inference TTS limit)
+            # Otherwise fall back to LiveKit Inference
+            tts_instance = create_tts_from_voice_descriptor(voice)
+            
+            if isinstance(tts_instance, str):
+                logger.info(f"📢 Using LiveKit Inference TTS (counts against connection limit)")
+            else:
+                logger.info(f"📢 Using TTS plugin directly (does NOT count against LiveKit Inference limit)")
+
+            # AgentSession with LiveKit Inference LLM + TTS (plugin or Inference)
             agent_session = AgentSession(
                 llm=llm_model,  # LiveKit Inference LLM (string descriptor)
-                tts=voice  # LiveKit Inference TTS (string descriptor)
+                tts=tts_instance  # TTS plugin instance or LiveKit Inference descriptor
             )
 
             # Set up event handlers for transcription capture

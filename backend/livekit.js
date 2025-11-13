@@ -83,6 +83,11 @@ export function getLiveKitUrl() {
   return url;
 }
 
+function getLiveKitApiUrl() {
+  const url = getLiveKitUrl();
+  return url.replace('wss://', 'https://').replace('ws://', 'http://');
+}
+
 /**
  * Verify that an agent participant has joined the room
  * @param {string} roomName - The room name to check
@@ -100,7 +105,7 @@ async function verifyAgentJoined(roomName, maxAttempts = 10, delayMs = 500) {
     return false;
   }
 
-  const roomService = new RoomServiceClient(url, apiKey, apiSecret);
+  const roomService = new RoomServiceClient(getLiveKitApiUrl(), apiKey, apiSecret);
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -195,13 +200,13 @@ async function dispatchAgentWithRetry(roomName, sessionId, model, voice, realtim
     throw new Error('LiveKit credentials not configured');
   }
 
-  const agentDispatchClient = new AgentDispatchClient(url, apiKey, apiSecret);
+  const agentDispatchClient = new AgentDispatchClient(getLiveKitApiUrl(), apiKey, apiSecret);
 
   // Agent metadata to pass to the LiveKit agent
   const agentMetadata = JSON.stringify({
     session_id: sessionId,
     realtime: realtime || false,
-    model: model || 'openai/gpt-5-nano',
+    model: model || 'openai/gpt-4.1-mini',
     voice: voice || (realtime ? 'alloy' : 'cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc'),
     instructions: 'You are a helpful voice AI assistant for CarPlay. Keep responses concise and clear for safe driving.',
     tool_calling_enabled: toolCallingEnabled !== undefined ? toolCallingEnabled : true,
@@ -212,7 +217,8 @@ async function dispatchAgentWithRetry(roomName, sessionId, model, voice, realtim
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`📡 Dispatching agent to room ${roomName} (attempt ${attempt}/${maxRetries})...`);
-      const dispatch = await agentDispatchClient.createDispatch(roomName, 'agent', { metadata: agentMetadata });
+      const agentName = process.env.LIVEKIT_AGENT_NAME || 'agent';
+      const dispatch = await agentDispatchClient.createDispatch(roomName, agentName, { metadata: agentMetadata });
       console.log(`✅ Agent dispatched to room ${roomName}:`, dispatch.id);
       return dispatch;
     } catch (error) {
