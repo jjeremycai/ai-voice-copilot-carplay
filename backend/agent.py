@@ -6,7 +6,7 @@ import aiohttp
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions, function_tool, RunContext
-from livekit.plugins import openai, cartesia, elevenlabs
+from livekit.plugins import openai, cartesia
 
 # Load environment variables from .env file
 load_dotenv()
@@ -163,21 +163,8 @@ def create_tts_from_voice_descriptor(voice_descriptor: str):
             return voice_descriptor
     
     if voice_descriptor.startswith("elevenlabs/"):
-        try:
-            parts = voice_descriptor.split(":", 1)
-            if len(parts) == 2:
-                model_part = parts[0]
-                voice_id = parts[1]
-                model = model_part.split("/")[-1] if "/" in model_part else "eleven_turbo_v2_5"
-                if os.getenv('ELEVENLABS_API_KEY'):
-                    return elevenlabs.TTS(model=model, voice=voice_id)
-                else:
-                    return voice_descriptor
-            else:
-                return voice_descriptor
-        except Exception as e:
-            logger.error(f"❌ Error creating ElevenLabs TTS: {e}")
-            return voice_descriptor
+        # Fallback to LiveKit Inference for ElevenLabs
+        return voice_descriptor
 
     return voice_descriptor
 
