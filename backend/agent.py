@@ -271,7 +271,7 @@ async def entrypoint(ctx: agents.JobContext):
 
             # Configure room input options
             # RoomIO (created automatically by AgentSession) handles track subscription
-            room_input_options = RoomInputOptions()
+            room_input_options = RoomInputOptions(close_on_disconnect=False)
             logger.info("🎤 Starting full Realtime agent session...")
             logger.info("   RoomIO will automatically subscribe to audio tracks")
             
@@ -335,7 +335,7 @@ async def entrypoint(ctx: agents.JobContext):
 
             # Configure room input options
             # RoomIO (created automatically by AgentSession) handles track subscription
-            room_input_options = RoomInputOptions()
+            room_input_options = RoomInputOptions(close_on_disconnect=False)
             logger.info("🎤 Starting hybrid agent session...")
             logger.info("   RoomIO will automatically subscribe to audio tracks")
             
