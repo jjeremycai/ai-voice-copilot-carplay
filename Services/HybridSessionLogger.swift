@@ -91,7 +91,8 @@ class HybridSessionLogger: ObservableObject {
                         title: "Session", // Title will come from summary
                         summarySnippet: session.context.rawValue.capitalized,
                         startedAt: session.startedAt,
-                        endedAt: session.endedAt
+                        endedAt: session.endedAt,
+                        context: session.context
                     )
                 }
             } else {
@@ -101,10 +102,13 @@ class HybridSessionLogger: ObservableObject {
 
             isLoading = false
         } catch {
+            if error is CancellationError {
+                isLoading = false
+                return
+            }
             self.error = error
             isLoading = false
 
-            // Try backend as fallback
             if let backendSessions = try? await backend.fetchSessions() {
                 sessions = backendSessions
             }

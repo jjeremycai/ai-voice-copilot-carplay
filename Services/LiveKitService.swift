@@ -12,6 +12,7 @@ protocol LiveKitServiceDelegate: AnyObject {
     func liveKitServiceDidConnect()
     func liveKitServiceDidDisconnect()
     func liveKitServiceDidFail(error: Error)
+    func liveKitServiceDidDetectActivity()
 }
 
 final class LiveKitService: @unchecked Sendable {
@@ -108,7 +109,17 @@ extension LiveKitService: RoomDelegate {
 
     nonisolated func room(_ room: Room, participant: RemoteParticipant, didSubscribeTo publication: RemoteTrackPublication, track: Track) {
         if publication.kind == .audio {
-            // Audio track subscribed successfully
+            Task { @MainActor in
+                delegate?.liveKitServiceDidDetectActivity()
+            }
+        }
+    }
+
+    nonisolated func room(_ room: Room, localParticipant: LocalParticipant, didPublish publication: LocalTrackPublication, track: Track) {
+        if publication.kind == .audio {
+            Task { @MainActor in
+                delegate?.liveKitServiceDidDetectActivity()
+            }
         }
     }
 }

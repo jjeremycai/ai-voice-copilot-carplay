@@ -34,6 +34,15 @@ class AssistantCallCoordinator: ObservableObject {
     // Track call start time for duration calculation
     private var callStartTime: Date?
 
+    // Inactivity and max duration timers
+    private var inactivityTimer: Timer?
+    private var maxDurationTimer: Timer?
+    private var lastActivityTime: Date?
+
+    // Constants
+    private let inactivityTimeout: TimeInterval = 5 * 60  // 5 minutes
+    private let maxCallDuration: TimeInterval = 60 * 60   // 1 hour
+
     private init() {
         callManager.delegate = self
         liveKitService.delegate = self
@@ -61,6 +70,9 @@ class AssistantCallCoordinator: ObservableObject {
 
         callState = .disconnecting
         errorMessage = nil
+
+        // Stop timers
+        stopTimers()
 
         // Calculate call duration
         let durationMinutes: Int? = {
@@ -112,7 +124,48 @@ class AssistantCallCoordinator: ObservableObject {
 
         pendingContext = nil
         callStartTime = nil
+        lastActivityTime = nil
         callState = .idle
+    }
+
+    private func startTimers() {
+        lastActivityTime = Date()
+
+        // Start inactivity timer (checks every 30 seconds)
+        inactivityTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.checkInactivity()
+            }
+        }
+
+        // Start max duration timer (1 hour)
+        maxDurationTimer = Timer.scheduledTimer(withTimeInterval: maxCallDuration, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                print("⏰ Max call duration reached (1 hour), ending call")
+                self?.endAssistantCall()
+            }
+        }
+    }
+
+    private func stopTimers() {
+        inactivityTimer?.invalidate()
+        inactivityTimer = nil
+        maxDurationTimer?.invalidate()
+        maxDurationTimer = nil
+    }
+
+    private func resetInactivityTimer() {
+        lastActivityTime = Date()
+    }
+
+    private func checkInactivity() {
+        guard let lastActivity = lastActivityTime else { return }
+
+        let timeSinceActivity = Date().timeIntervalSince(lastActivity)
+        if timeSinceActivity >= inactivityTimeout {
+            print("⏰ Inactivity timeout reached (5 minutes), ending call")
+            endAssistantCall()
+        }
     }
     
     private func handleCallConnected() {
@@ -147,6 +200,7 @@ class AssistantCallCoordinator: ObservableObject {
                 await MainActor.run {
                     currentSessionID = response.sessionId
                     callStartTime = Date()
+                    startTimers()
                     liveKitService.connect(
                         sessionID: response.sessionId,
                         url: response.livekitUrl,
@@ -205,5 +259,9 @@ extension AssistantCallCoordinator: LiveKitServiceDelegate {
         print("❌ Error description: \(error.localizedDescription)")
         errorMessage = "Connection failed: \(error.localizedDescription)"
         endAssistantCall()
+    }
+
+    func liveKitServiceDidDetectActivity() {
+        resetInactivityTimer()
     }
 }

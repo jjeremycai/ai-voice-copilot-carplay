@@ -46,7 +46,6 @@ struct PaywallView: View {
                     // Products
                     if subscriptionManager.isLoading {
                         ProgressView()
-                            .scaleEffect(1.5)
                             .padding()
                     } else if subscriptionManager.availableProducts.isEmpty {
                         Text("Loading subscription options...")
@@ -99,7 +98,7 @@ struct PaywallView: View {
                 }
             }
             .navigationTitle("Subscription")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Close") {
@@ -183,7 +182,24 @@ struct ProductButton: View {
     }
 
     private var period: String {
-        product.id.contains("month") ? "Monthly" : "Yearly"
+        if let unit = product.subscription?.subscriptionPeriod.unit {
+            switch unit {
+            case .week:
+                return "Weekly"
+            case .month:
+                return "Monthly"
+            case .year:
+                return "Yearly"
+            case .day:
+                return "Daily"
+            @unknown default:
+                break
+            }
+        }
+        if product.id.contains("week") { return "Weekly" }
+        if product.id.contains("month") { return "Monthly" }
+        if product.id.contains("year") { return "Yearly" }
+        return "Subscription"
     }
 
     var body: some View {
@@ -197,7 +213,7 @@ struct ProductButton: View {
                         if let savings = savings {
                             Text(savings)
                                 .font(.caption)
-                                .fontWeight(.semibold)
+                                .fontWeight(.bold)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 2)
                                 .background(Color.green.opacity(0.2))

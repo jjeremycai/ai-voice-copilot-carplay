@@ -78,12 +78,64 @@ class VoicePreviewService: NSObject, ObservableObject {
         return playingVoiceId == cacheKey && (audioPlayers[cacheKey]?.isPlaying ?? false)
     }
     
+    /// Map voice ID to preview file name
+    /// Maps the app's voice IDs to the backend preview file names
+    private func getPreviewFileName(for voice: TTSVoice) -> String {
+        // Map voice IDs to preview file names
+        // This mapping is needed because the app's voice IDs don't match the backend preview file names
+        
+        switch voice.id {
+        // Cartesia voices - map to available preview files
+        case "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc": // Jacqueline
+            return "cartesia-katie"
+        case "cartesia/sonic-3:a167e0f3-df7e-4d52-a9c3-f949145efdab": // Blake
+            return "cartesia-kiefer"
+        case "cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1": // Robyn
+            return "cartesia-tessa"
+        case "cartesia/sonic-3:5c5ad5e7-1020-476b-8b91-fdcbe9cc313c": // Daniela
+            return "cartesia-kyle"
+            
+        // ElevenLabs voices - map to available preview files
+        case "elevenlabs/eleven_turbo_v2_5:cgSgspJ2msm6clMCkdW9": // Jessica
+            return "elevenlabs-rachel"
+        case "elevenlabs/eleven_turbo_v2_5:iP95p4xoKVk53GoZ742B": // Chris
+            return "elevenlabs-clyde"
+        case "elevenlabs/eleven_turbo_v2_5:Xb7hH8MSUJpSbSDYk0k2": // Alice
+            return "elevenlabs-laura"
+        case "elevenlabs/eleven_turbo_v2_5:cjVigY5qzO86Huf0OWal": // Eric
+            return "elevenlabs-roger"
+            
+        // OpenAI Realtime voices - prefix with "openai-"
+        case "alloy", "echo", "fable", "onyx", "nova", "shimmer":
+            return "openai-\(voice.id)"
+            
+        // Default: try to use the voice ID as-is (for backwards compatibility)
+        default:
+            return voice.id.replacingOccurrences(of: "/", with: "-")
+                .replacingOccurrences(of: ":", with: "-")
+        }
+    }
+    
     /// Get preview audio URL (pre-generated static file)
     private func generatePreview(voice: TTSVoice) async throws -> URL {
         let configuration = Configuration.shared
 
         // Determine file extension based on provider
-        let fileExtension = voice.provider == .cartesia ? "wav" : "mp3"
+        let fileExtension: String
+        let voiceFileName: String
+
+        switch voice.provider {
+        case .cartesia:
+            fileExtension = "wav"
+            voiceFileName = getPreviewFileName(for: voice)
+        case .elevenlabs:
+            fileExtension = "mp3"
+            voiceFileName = getPreviewFileName(for: voice)
+        case .openaiRealtime:
+            // OpenAI Realtime voices use simple IDs like "alloy", "echo", etc.
+            fileExtension = "mp3"
+            voiceFileName = getPreviewFileName(for: voice)
+        }
 
         // Construct URL to static preview file
         // Use the API endpoint that serves static files
@@ -102,25 +154,39 @@ class VoicePreviewService: NSObject, ObservableObject {
         }
 
         // Use the static file endpoint: /voice-previews/{voiceId}.{ext}
-        guard let previewURL = URL(string: "\(basePath)/voice-previews/\(voice.id).\(fileExtension)") else {
+        guard let previewURL = URL(string: "\(basePath)/voice-previews/\(voiceFileName).\(fileExtension)") else {
             throw VoicePreviewError.invalidURL
         }
 
+        // Check if file already exists in cache
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cacheSubDir = cacheDir.appendingPathComponent("voice-previews", isDirectory: true)
+        
+        // Create cache directory if it doesn't exist
+        try? FileManager.default.createDirectory(at: cacheSubDir, withIntermediateDirectories: true)
+        
+        let fileName = "\(voiceFileName)-preview.\(fileExtension)"
+        let cachedFileURL = cacheSubDir.appendingPathComponent(fileName)
+        
+        // If file already exists locally, use it
+        if FileManager.default.fileExists(atPath: cachedFileURL.path) {
+            return cachedFileURL
+        }
+        
         // Download and cache the preview file
         let (data, response) = try await URLSession.shared.data(from: previewURL)
 
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            print("❌ Failed to download preview: HTTP \(statusCode) from \(previewURL.absoluteString)")
             throw VoicePreviewError.generationFailed
         }
 
-        // Save to temporary file for playback
-        let tempDir = FileManager.default.temporaryDirectory
-        let fileName = "\(voice.id)-preview.\(fileExtension)"
-        let fileURL = tempDir.appendingPathComponent(fileName)
-
-        try data.write(to: fileURL)
-        return fileURL
+        // Save to cache directory for persistent storage
+        try data.write(to: cachedFileURL)
+        print("✅ Cached preview: \(fileName) (\(data.count) bytes)")
+        return cachedFileURL
     }
 }
 

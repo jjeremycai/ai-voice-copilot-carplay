@@ -56,6 +56,16 @@ struct SessionListItem: Identifiable, Codable {
     let summarySnippet: String
     let startedAt: Date
     let endedAt: Date?
+    let context: Session.SessionContext?
+    
+    init(id: String, title: String, summarySnippet: String, startedAt: Date, endedAt: Date?, context: Session.SessionContext? = nil) {
+        self.id = id
+        self.title = title
+        self.summarySnippet = summarySnippet
+        self.startedAt = startedAt
+        self.endedAt = endedAt
+        self.context = context
+    }
 }
 
 struct StartSessionResponse: Codable {

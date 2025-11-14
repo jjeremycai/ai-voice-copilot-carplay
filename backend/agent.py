@@ -6,6 +6,7 @@ import aiohttp
 from dotenv import load_dotenv
 from livekit import agents
 from livekit.agents import AgentSession, Agent, RoomInputOptions, function_tool, RunContext
+from livekit.agents import inference
 from livekit.plugins import openai, cartesia
 
 # Load environment variables from .env file
@@ -49,7 +50,7 @@ def verify_env():
 BACKEND_URL = os.getenv('BACKEND_URL', 'https://shaw.up.railway.app')
 
 class Assistant(Agent):
-    def __init__(self, tool_calling_enabled=True, web_search_enabled=True) -> None:
+    def __init__(self, tool_calling_enabled=True, web_search_enabled=True, stt_model: str | None = None, stt_language: str | None = None) -> None:
         # Update instructions based on tool availability
         base_instructions = "You are a helpful voice AI assistant for CarPlay. Keep responses concise, clear, and in English for safe driving. Default to English unless the driver explicitly asks for another language."
 
@@ -58,7 +59,20 @@ class Assistant(Agent):
         else:
             instructions = base_instructions + " Rely on your built-in knowledge to answer questions."
 
-        super().__init__(instructions=instructions)
+        # Configure STT for hybrid mode (defaults to Deepgram via LiveKit Inference)
+        # Provide a descriptor string "provider/model:language" or construct explicitly
+        stt_descriptor = None
+        if stt_model:
+            if stt_language:
+                stt_descriptor = f"{stt_model}:{stt_language}"
+            else:
+                stt_descriptor = stt_model
+
+        super().__init__(
+            instructions=instructions,
+            stt=stt_descriptor if stt_descriptor else inference.STT.from_model_string("deepgram/nova-3:en-US"),
+            use_tts_aligned_transcript=True,
+        )
 
         # Store settings
         self._web_search_enabled = web_search_enabled
@@ -262,12 +276,33 @@ async def entrypoint(ctx: agents.JobContext):
             @agent_session.on("user_speech_committed")
             def on_user_speech(msg: agents.llm.ChatMessage):
                 if session_id and msg.content:
+                    logger.info(f"🗣️ Committed USER speech ({len(msg.content)} chars) — saving turn")
                     asyncio.create_task(save_turn(session_id, "user", msg.content))
 
             @agent_session.on("agent_speech_committed")
             def on_agent_speech(msg: agents.llm.ChatMessage):
                 if session_id and msg.content:
+                    logger.info(f"🗣️ Committed AGENT speech ({len(msg.content)} chars) — saving turn")
                     asyncio.create_task(save_turn(session_id, "assistant", msg.content))
+
+            @agent_session.on("conversation_item_added")
+            def on_conversation_item(item):
+                try:
+                    role = getattr(item, "role", None)
+                    content = getattr(item, "content", None)
+                    if not content and hasattr(item, "text"):
+                        content = getattr(item, "text")
+                    if not content and hasattr(item, "message") and hasattr(item.message, "content"):
+                        content = getattr(item.message, "content")
+                    if not role:
+                        role = "assistant"
+                    if session_id and content and role in ("user", "assistant"):
+                        logger.info(f"🧾 Conversation item committed ({role}, {len(content)} chars) — saving turn")
+                        asyncio.create_task(save_turn(session_id, role, content))
+                    else:
+                        logger.debug(f"🧾 Conversation item ignored: role={role}, has_content={bool(content)}")
+                except Exception as e:
+                    logger.error(f"❌ Error handling conversation_item_added: {e}")
 
             # Configure room input options
             # RoomIO (created automatically by AgentSession) handles track subscription
@@ -318,7 +353,8 @@ async def entrypoint(ctx: agents.JobContext):
             # AgentSession with LiveKit Inference LLM + TTS (plugin or Inference)
             agent_session = AgentSession(
                 llm=llm_model,  # LiveKit Inference LLM (string descriptor)
-                tts=tts_instance  # TTS plugin instance or LiveKit Inference descriptor
+                tts=tts_instance,  # TTS plugin instance or LiveKit Inference descriptor
+                stt=inference.STT.from_model_string("deepgram/nova-3:en-US"),
             )
 
             # Set up event handlers for transcription capture
@@ -333,6 +369,25 @@ async def entrypoint(ctx: agents.JobContext):
                 if session_id and msg.content:
                     asyncio.create_task(save_turn(session_id, "assistant", msg.content))
 
+            @agent_session.on("conversation_item_added")
+            def on_conversation_item(item):
+                try:
+                    role = getattr(item, "role", None)
+                    content = getattr(item, "content", None)
+                    if not content and hasattr(item, "text"):
+                        content = getattr(item, "text")
+                    if not content and hasattr(item, "message") and hasattr(item.message, "content"):
+                        content = getattr(item.message, "content")
+                    if not role:
+                        role = "assistant"
+                    if session_id and content and role in ("user", "assistant"):
+                        logger.info(f"🧾 Conversation item committed ({role}, {len(content)} chars) — saving turn")
+                        asyncio.create_task(save_turn(session_id, role, content))
+                    else:
+                        logger.debug(f"🧾 Conversation item ignored: role={role}, has_content={bool(content)}")
+                except Exception as e:
+                    logger.error(f"❌ Error handling conversation_item_added: {e}")
+
             # Configure room input options
             # RoomIO (created automatically by AgentSession) handles track subscription
             room_input_options = RoomInputOptions(close_on_disconnect=False)
@@ -341,7 +396,12 @@ async def entrypoint(ctx: agents.JobContext):
             
             await agent_session.start(
                 room=ctx.room,
-                agent=Assistant(tool_calling_enabled=tool_calling_enabled, web_search_enabled=web_search_enabled),
+                agent=Assistant(
+                    tool_calling_enabled=tool_calling_enabled,
+                    web_search_enabled=web_search_enabled,
+                    stt_model="deepgram/nova-3",
+                    stt_language="en-US",
+                ),
                 room_input_options=room_input_options,
             )
             

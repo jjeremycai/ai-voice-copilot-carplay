@@ -27,26 +27,26 @@ struct TTSVoice: Identifiable, Codable, Equatable {
     let requiresPro: Bool
 
     static let cartesiaVoices: [TTSVoice] = [
-        TTSVoice(id: "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc", name: "Jacqueline", description: "Confident, young American adult female", provider: .cartesia, requiresPro: false),
-        TTSVoice(id: "cartesia/sonic-3:a167e0f3-df7e-4d52-a9c3-f949145efdab", name: "Blake", description: "Energetic American adult male", provider: .cartesia, requiresPro: false),
-        TTSVoice(id: "cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1", name: "Robyn", description: "Neutral, mature Australian female", provider: .cartesia, requiresPro: false),
-        TTSVoice(id: "cartesia/sonic-3:5c5ad5e7-1020-476b-8b91-fdcbe9cc313c", name: "Daniela", description: "Calm and trusting Mexican female", provider: .cartesia, requiresPro: false)
+        TTSVoice(id: "cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc", name: "Jacqueline", description: "Confident young American woman", provider: .cartesia, requiresPro: false),
+        TTSVoice(id: "cartesia/sonic-3:a167e0f3-df7e-4d52-a9c3-f949145efdab", name: "Blake", description: "Energetic American man", provider: .cartesia, requiresPro: false),
+        TTSVoice(id: "cartesia/sonic-3:f31cc6a7-c1e8-4764-980c-60a361443dd1", name: "Robyn", description: "Calm Australian woman", provider: .cartesia, requiresPro: false),
+        TTSVoice(id: "cartesia/sonic-3:5c5ad5e7-1020-476b-8b91-fdcbe9cc313c", name: "Daniela", description: "Warm Mexican woman", provider: .cartesia, requiresPro: false)
     ]
 
     static let elevenlabsVoices: [TTSVoice] = [
-        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:cgSgspJ2msm6clMCkdW9", name: "Jessica", description: "Young and popular, playful American female", provider: .elevenlabs, requiresPro: false),
-        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:iP95p4xoKVk53GoZ742B", name: "Chris", description: "Natural and real American male", provider: .elevenlabs, requiresPro: false),
-        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:Xb7hH8MSUJpSbSDYk0k2", name: "Alice", description: "Clear and engaging, friendly British woman", provider: .elevenlabs, requiresPro: false),
-        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:cjVigY5qzO86Huf0OWal", name: "Eric", description: "A smooth tenor Mexican male", provider: .elevenlabs, requiresPro: false)
+        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:cgSgspJ2msm6clMCkdW9", name: "Jessica", description: "Playful American woman", provider: .elevenlabs, requiresPro: false),
+        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:iP95p4xoKVk53GoZ742B", name: "Chris", description: "Natural American man", provider: .elevenlabs, requiresPro: false),
+        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:Xb7hH8MSUJpSbSDYk0k2", name: "Alice", description: "Friendly British woman", provider: .elevenlabs, requiresPro: false),
+        TTSVoice(id: "elevenlabs/eleven_turbo_v2_5:cjVigY5qzO86Huf0OWal", name: "Eric", description: "Smooth Mexican man", provider: .elevenlabs, requiresPro: false)
     ]
 
     static let openaiRealtimeVoices: [TTSVoice] = [
-        TTSVoice(id: "alloy", name: "Alloy", description: "Neutral, balanced voice", provider: .openaiRealtime, requiresPro: true),
-        TTSVoice(id: "echo", name: "Echo", description: "Warm, friendly voice", provider: .openaiRealtime, requiresPro: true),
-        TTSVoice(id: "fable", name: "Fable", description: "Expressive, storytelling voice", provider: .openaiRealtime, requiresPro: true),
-        TTSVoice(id: "onyx", name: "Onyx", description: "Deep, authoritative voice", provider: .openaiRealtime, requiresPro: true),
-        TTSVoice(id: "nova", name: "Nova", description: "Clear, energetic voice", provider: .openaiRealtime, requiresPro: true),
-        TTSVoice(id: "shimmer", name: "Shimmer", description: "Soft, soothing voice", provider: .openaiRealtime, requiresPro: true)
+        TTSVoice(id: "alloy", name: "Alloy", description: "Neutral balanced voice", provider: .openaiRealtime, requiresPro: true),
+        TTSVoice(id: "echo", name: "Echo", description: "Warm friendly voice", provider: .openaiRealtime, requiresPro: true),
+        TTSVoice(id: "fable", name: "Fable", description: "Expressive storytelling voice", provider: .openaiRealtime, requiresPro: true),
+        TTSVoice(id: "onyx", name: "Onyx", description: "Deep authoritative voice", provider: .openaiRealtime, requiresPro: true),
+        TTSVoice(id: "nova", name: "Nova", description: "Clear energetic voice", provider: .openaiRealtime, requiresPro: true),
+        TTSVoice(id: "shimmer", name: "Shimmer", description: "Soft soothing voice", provider: .openaiRealtime, requiresPro: true)
     ]
 
     static func voices(for provider: TTSProvider) -> [TTSVoice] {
@@ -99,9 +99,6 @@ enum AIModel: String, Codable, CaseIterable {
     case claudeSonnet45 = "claude-sonnet-4-5"
     case claudeHaiku45 = "claude-haiku-4-5"
 
-    // Anthropic Claude Opus
-    case claudeOpus41 = "claude-opus-4-1"
-
     // Google Gemini 2.5 Series
     case gemini25Pro = "google/gemini-2.5-pro"
     case gemini25Flash = "google/gemini-2.5-flash"
@@ -121,7 +118,7 @@ enum AIModel: String, Codable, CaseIterable {
              .gpt5, .gpt5Mini, .gpt5Nano,
              .gpt4o, .gpt4oMini, .gptOss120B:
             return .openai
-        case .claudeSonnet45, .claudeHaiku45, .claudeOpus41:
+        case .claudeSonnet45, .claudeHaiku45:
             return .anthropic
         case .gemini25Pro, .gemini25Flash, .gemini25FlashLite,
              .gemini20Flash, .gemini20FlashLite:
@@ -143,7 +140,6 @@ enum AIModel: String, Codable, CaseIterable {
         case .gpt4oMini: return "GPT-4o Mini"
         case .claudeSonnet45: return "Claude Sonnet 4.5"
         case .claudeHaiku45: return "Claude Haiku 4.5"
-        case .claudeOpus41: return "Claude Opus 4.1"
         case .gemini25Pro: return "Gemini 2.5 Pro"
         case .gemini25Flash: return "Gemini 2.5 Flash"
         case .gemini25FlashLite: return "Gemini 2.5 Flash Lite"
@@ -166,7 +162,6 @@ enum AIModel: String, Codable, CaseIterable {
         case .gpt4oMini: return "GPT-4o Mini - Fast and efficient"
         case .claudeSonnet45: return "Most capable Claude - Best for complex tasks"
         case .claudeHaiku45: return "Fast Claude - Great for quick responses"
-        case .claudeOpus41: return "Claude Opus - Advanced reasoning"
         case .gemini25Pro: return "Most capable Gemini - Best for reasoning"
         case .gemini25Flash: return "Fast multimodal Gemini"
         case .gemini25FlashLite: return "Ultra-fast Gemini"
@@ -174,6 +169,15 @@ enum AIModel: String, Codable, CaseIterable {
         case .gemini20FlashLite: return "Gemini 2.0 - Lightning fast"
         case .deepseekV3: return "DeepSeek V3 - Open source reasoning"
         case .gptOss120B: return "GPT OSS 120B - Open source"
+        }
+    }
+
+    var requiresPro: Bool {
+        switch self {
+        case .claudeSonnet45, .gemini25Pro:
+            return true
+        default:
+            return false
         }
     }
 

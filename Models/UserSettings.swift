@@ -40,9 +40,33 @@ class UserSettings: ObservableObject {
         }
     }
 
+    @Published var toolCallingEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(toolCallingEnabled, forKey: "toolCallingEnabled")
+            // Skip dependency logic during initialization to preserve user preferences
+            guard !isInitializing else { return }
+            // Automatically disable web search when tool calling is disabled
+            if !toolCallingEnabled {
+                self.webSearchEnabled = false
+            } else {
+                // Automatically enable web search when tool calling is enabled
+                self.webSearchEnabled = true
+            }
+        }
+    }
+
+    @Published var webSearchEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(webSearchEnabled, forKey: "webSearchEnabled")
+        }
+    }
+
     static let shared = UserSettings()
 
     // Retention options: 0 = Never delete, > 0 = number of days
+    
+    // Flag to prevent didSet side effects during initialization
+    private var isInitializing = true
 
     private init() {
         self.loggingEnabled = UserDefaults.standard.bool(forKey: "loggingEnabled")
@@ -59,9 +83,15 @@ class UserSettings: ObservableObject {
         // Load selected model
         if let data = UserDefaults.standard.data(forKey: "selectedModel"),
            let model = try? JSONDecoder().decode(AIModel.self, from: data) {
-            self.selectedModel = model
+            // Migrate from old defaults to new default (GPT-5 Nano)
+            // This ensures users get the latest default even if they had an old default saved
+            if model == .gpt5Mini || model == .gpt41Nano {
+                self.selectedModel = .gpt5Nano
+            } else {
+                self.selectedModel = model
+            }
         } else {
-            self.selectedModel = .gpt5Mini
+            self.selectedModel = .gpt5Nano
         }
 
         // Load selected voice (default to Cartesia Sonic 3)
@@ -72,6 +102,24 @@ class UserSettings: ObservableObject {
             // Default to Cartesia Sonic 3 - Jacqueline
             self.selectedVoice = TTSVoice.default
         }
+
+        // Load tool calling settings (default to enabled)
+        // Load both values first, then set them in any order since didSet dependency logic
+        // is skipped during initialization (via isInitializing flag)
+        if UserDefaults.standard.object(forKey: "toolCallingEnabled") != nil {
+            self.toolCallingEnabled = UserDefaults.standard.bool(forKey: "toolCallingEnabled")
+        } else {
+            self.toolCallingEnabled = true // Default to enabled
+        }
+
+        if UserDefaults.standard.object(forKey: "webSearchEnabled") != nil {
+            self.webSearchEnabled = UserDefaults.standard.bool(forKey: "webSearchEnabled")
+        } else {
+            self.webSearchEnabled = true // Default to enabled
+        }
+        
+        // Mark initialization as complete - dependency logic will now apply to future changes
+        isInitializing = false
     }
 }
 

@@ -15,6 +15,8 @@ struct SessionDetailScreen: View {
     @State private var showDeleteConfirmation = false
     @State private var showShareSummary = false
     @State private var showShareTranscript = false
+    @State private var showSuccessMessage = false
+    @State private var successMessage = ""
     @ObservedObject var appCoordinator = AppCoordinator.shared
     @StateObject private var hybridLogger = HybridSessionLogger.shared
     
@@ -29,7 +31,7 @@ struct SessionDetailScreen: View {
                     VStack(spacing: 16) {
                         Image(systemName: error.contains("not found") ? "xmark.circle" : "exclamationmark.triangle")
                             .font(.largeTitle)
-                            .foregroundColor(error.contains("not found") ? .red : .orange)
+                            .foregroundColor(.red)
                         Text(error)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -50,10 +52,6 @@ struct SessionDetailScreen: View {
                     }
                     .padding()
                 } else {
-                    if let session = session {
-                        SessionMetadataSection(session: session)
-                    }
-                    
                     if let summary = summary {
                         SummarySection(
                             summary: summary,
@@ -87,9 +85,11 @@ struct SessionDetailScreen: View {
             .padding()
         }
         .refreshable {
+            HapticFeedbackService.shared.light()
             loadSessionDetails()
+            HapticFeedbackService.shared.success()
         }
-        .navigationTitle("Session Details")
+        .navigationTitle(summary?.title ?? "Session")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -113,6 +113,7 @@ struct SessionDetailScreen: View {
                     Divider()
 
                     Button(role: .destructive, action: {
+                        HapticFeedbackService.shared.heavy()
                         showDeleteConfirmation = true
                     }) {
                         Label("Delete Session", systemImage: "trash")
@@ -153,6 +154,10 @@ struct SessionDetailScreen: View {
         Task {
             do {
                 let detail = try await SessionLogger.shared.fetchSessionDetailWithRetry(sessionID: sessionID)
+                let summaryPresent = detail.summary != nil
+                let turnsCount = detail.turns.count
+                let firstTurnPreview = detail.turns.first?.text.prefix(80) ?? ""
+                print("📄 Detail fetched — summary: \(summaryPresent), turns: \(turnsCount), first: \(firstTurnPreview)")
                 await MainActor.run {
                     self.session = detail.session
                     self.summary = detail.summary
@@ -174,11 +179,13 @@ struct SessionDetailScreen: View {
             do {
                 try await hybridLogger.deleteSession(id: sessionID)
                 await MainActor.run {
+                    HapticFeedbackService.shared.success()
                     appCoordinator.navigateBack()
                 }
             } catch {
                 await MainActor.run {
                     errorMessage = "Failed to delete session: \(error.localizedDescription)"
+                    HapticFeedbackService.shared.error()
                 }
             }
         }
@@ -226,6 +233,8 @@ struct SummarySection: View {
     @State private var editedTitle: String = ""
     @State private var isUpdating = false
     @State private var updateError: String?
+    @State private var showSuccessMessage = false
+    @State private var successMessage = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -241,9 +250,9 @@ struct SummarySection: View {
 
                     if isUpdating {
                         ProgressView()
-                            .scaleEffect(0.8)
                     } else {
                         Button("Save") {
+                            HapticFeedbackService.shared.medium()
                             updateTitle()
                         }
                         .buttonStyle(.borderedProminent)
@@ -271,11 +280,22 @@ struct SummarySection: View {
                 }
             }
 
-            if let error = updateError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundColor(.red)
-            }
+                if let error = updateError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                
+                if showSuccessMessage {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text(successMessage)
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
+                    .transition(.opacity.combined(with: .scale))
+                }
 
             Text(summary.summaryText)
                 .font(.body)
@@ -314,6 +334,8 @@ struct SummarySection: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .animation(.easeInOut(duration: 0.2), value: showSuccessMessage)
+        .animation(.easeInOut(duration: 0.2), value: updateError)
     }
 
     private func updateTitle() {
@@ -351,11 +373,24 @@ struct SummarySection: View {
                     onTitleUpdated(trimmedTitle)
                     isEditingTitle = false
                     isUpdating = false
+                    updateError = nil
+                    showSuccessMessage = true
+                    successMessage = "Title updated"
+                    HapticFeedbackService.shared.success()
+                    
+                    // Hide success message after 2 seconds
+                    Task {
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
+                        await MainActor.run {
+                            showSuccessMessage = false
+                        }
+                    }
                 }
             } catch {
                 await MainActor.run {
                     updateError = "Failed to update title: \(error.localizedDescription)"
                     isUpdating = false
+                    HapticFeedbackService.shared.error()
                 }
             }
         }
@@ -429,14 +464,22 @@ struct SessionMetadataSection: View {
                     .font(.title2)
                     .fontWeight(.bold)
                 Spacer()
-                Text(statusDescription.text)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(statusDescription.color.opacity(0.15))
-                    .foregroundColor(statusDescription.color)
-                    .cornerRadius(8)
+                HStack(spacing: 4) {
+                    if session.summaryStatus == .pending {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .frame(width: 12, height: 12)
+                    }
+                    Text(statusDescription.text)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(statusDescription.color.opacity(0.15))
+                .foregroundColor(statusDescription.color)
+                .cornerRadius(8)
+                .animation(.easeInOut(duration: 0.3), value: session.summaryStatus)
             }
             
             VStack(alignment: .leading, spacing: 6) {

@@ -26,7 +26,7 @@ struct CallScreen: View {
                             NavigationLink(destination: VoicePickerView(settings: settings)) {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Voice")
+                                        Text(settings.selectedVoice.provider.displayName)
                                             .font(.subheadline)
                                             .foregroundColor(.secondary)
                                         Text(settings.selectedVoice.name)
@@ -35,13 +35,15 @@ struct CallScreen: View {
                                     Spacer()
                                 }
                             }
+                            .accessibilityLabel("Voice: \(settings.selectedVoice.name)")
+                            .accessibilityHint("Double tap to change voice")
                         } header: {
                             Text("Voice")
                         } footer: {
                             if settings.selectedVoice.isRealtimeMode {
-                                Text("OpenAI Realtime mode: Low latency, full-duplex voice conversation with native audio I/O")
+                                Text("Ultra-low latency voice conversation with natural, real-time responses")
                             } else {
-                                Text("Hybrid mode: OpenAI Realtime (text-only) + \(settings.selectedVoice.provider.displayName) TTS for cost savings")
+                                Text("High-quality voice synthesis optimized for cost efficiency")
                             }
                         }
 
@@ -50,7 +52,7 @@ struct CallScreen: View {
                                 NavigationLink(destination: ModelPickerView(settings: settings)) {
                                     HStack {
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text("AI Model")
+                                            Text(settings.selectedModel.provider.displayName)
                                                 .font(.subheadline)
                                                 .foregroundColor(.secondary)
                                             Text(settings.selectedModel.displayName)
@@ -59,10 +61,12 @@ struct CallScreen: View {
                                         Spacer()
                                     }
                                 }
+                                .accessibilityLabel("AI Model: \(settings.selectedModel.displayName)")
+                                .accessibilityHint("Double tap to change AI model")
                             } header: {
                                 Text("AI Model")
                             } footer: {
-                                Text("Select the language model for voice understanding and conversation")
+                                Text("Choose how smart and fast your assistant responds to your questions")
                             }
                         }
 
@@ -141,6 +145,7 @@ struct LoggingOptionsView: View {
     var body: some View {
         VStack(spacing: 12) {
             Button(action: {
+                HapticFeedbackService.shared.selection()
                 selectedOption = .enabled
                 settings.loggingEnabled = true
             }) {
@@ -166,6 +171,7 @@ struct LoggingOptionsView: View {
             .buttonStyle(.plain)
 
             Button(action: {
+                HapticFeedbackService.shared.selection()
                 selectedOption = .disabled
                 settings.loggingEnabled = false
             }) {
@@ -200,9 +206,11 @@ struct CallButtonView: View {
     var body: some View {
         Button(action: {
             if callCoordinator.callState == .idle {
+                HapticFeedbackService.shared.medium()
                 let enableLogging = selectedLoggingOption == .enabled
                 callCoordinator.startAssistantCall(context: "phone", enableLogging: enableLogging)
             } else {
+                HapticFeedbackService.shared.medium()
                 callCoordinator.endAssistantCall()
             }
         }) {
@@ -210,7 +218,6 @@ struct CallButtonView: View {
                 if callCoordinator.callState == .connecting || callCoordinator.callState == .disconnecting {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(1.2)
                 } else {
                     Image(systemName: callCoordinator.callState == .idle ? "phone.fill" : "phone.down.fill")
                         .font(.system(size: 24, weight: .semibold))
@@ -227,6 +234,9 @@ struct CallButtonView: View {
             .shadow(color: buttonShadowColor.opacity(0.4), radius: 12, x: 0, y: 6)
         }
         .disabled(callCoordinator.callState == .connecting || callCoordinator.callState == .disconnecting)
+        .animation(.easeInOut(duration: 0.3), value: callCoordinator.callState)
+        .accessibilityLabel(buttonText)
+        .accessibilityHint(callCoordinator.callState == .idle ? "Double tap to start a call" : "Double tap to end the call")
     }
     
     private var buttonText: String {
@@ -319,21 +329,41 @@ struct ErrorIndicatorView: View {
 
 struct ModelPickerView: View {
     @ObservedObject var settings: UserSettings
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
         List {
             ForEach(AIModelProvider.allCases, id: \.self) { provider in
                 let models = AIModel.models(for: provider)
-                Section(provider.displayName) {
+                Section {
                     ForEach(models, id: \.self) { model in
                         Button {
+                            if model.requiresPro && !subscriptionManager.state.isActive {
+                                // Don't allow selection of Pro models for non-Pro users
+                                HapticFeedbackService.shared.warning()
+                                return
+                            }
+                            HapticFeedbackService.shared.selection()
                             settings.selectedModel = model
                         } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(model.displayName)
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
+                                    HStack(spacing: 6) {
+                                        Text(model.displayName)
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        
+                                        if model.requiresPro && !subscriptionManager.state.isActive {
+                                            Text("PRO")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal, 4)
+                                                .padding(.vertical, 1)
+                                                .background(Color.blue)
+                                                .cornerRadius(3)
+                                        }
+                                    }
                                     Text(model.description)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
@@ -344,11 +374,30 @@ struct ModelPickerView: View {
                                 if settings.selectedModel == model {
                                     Image(systemName: "checkmark")
                                         .foregroundColor(.blue)
+                                        .fontWeight(.bold)
+                                        .transition(.scale.combined(with: .opacity))
                                 }
                             }
                             .contentShape(Rectangle())
+                            .animation(.easeInOut(duration: 0.2), value: settings.selectedModel == model)
                         }
                         .buttonStyle(.plain)
+                        .disabled(model.requiresPro && !subscriptionManager.state.isActive)
+                        .opacity(model.requiresPro && !subscriptionManager.state.isActive ? 0.5 : 1.0)
+                    }
+                } header: {
+                    HStack {
+                        Text(provider.displayName)
+                        if models.contains(where: { $0.requiresPro }) {
+                            Text("PRO")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.blue)
+                                .cornerRadius(4)
+                        }
                     }
                 }
             }
@@ -371,8 +420,10 @@ struct VoicePickerView: View {
                         Button {
                             if voice.requiresPro && !subscriptionManager.state.isActive {
                                 // Don't allow selection of Pro voices for non-Pro users
+                                HapticFeedbackService.shared.warning()
                                 return
                             }
+                            HapticFeedbackService.shared.selection()
                             settings.selectedVoice = voice
                         } label: {
                             VoicePickerRow(
@@ -384,31 +435,38 @@ struct VoicePickerView: View {
                         .buttonStyle(.plain)
                         .disabled(voice.requiresPro && !subscriptionManager.state.isActive)
                         .opacity(voice.requiresPro && !subscriptionManager.state.isActive ? 0.5 : 1.0)
+                        .animation(.easeInOut(duration: 0.2), value: settings.selectedVoice.id)
                     }
                 } header: {
-                    HStack {
-                        Text(provider.displayName)
-                        if voices.first?.requiresPro == true {
-                            Text("PRO")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(subscriptionManager.state.isActive ? Color.blue : Color.gray)
-                                .cornerRadius(4)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(provider.displayName)
+                            if voices.first?.requiresPro == true {
+                                Text("PRO")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.blue)
+                                    .cornerRadius(4)
+                            }
                         }
-                    }
-                } footer: {
-                    if provider == .cartesia {
-                        Text("Cartesia Sonic 3: Cost-effective, high-quality voices")
-                    } else if provider == .elevenlabs {
-                        Text("ElevenLabs: Premium quality, natural-sounding voices")
-                    } else if provider == .openaiRealtime {
-                        if subscriptionManager.state.isActive {
-                            Text("OpenAI Realtime: Full-duplex audio mode with native audio I/O")
-                        } else {
-                            Text("OpenAI Realtime voices require a Pro subscription")
+                        if provider == .cartesia {
+                            Text("High-quality, natural voices")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .textCase(.none)
+                        } else if provider == .elevenlabs {
+                            Text("Premium, ultra-realistic voices")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .textCase(.none)
+                        } else if provider == .openaiRealtime {
+                            Text("Highest quality real-time interactions")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .textCase(.none)
                         }
                     }
                 }
@@ -446,7 +504,7 @@ struct VoicePickerRow: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
-                            .background(Color.gray)
+                            .background(Color.blue)
                             .cornerRadius(3)
                     }
                 }
@@ -459,7 +517,6 @@ struct VoicePickerRow: View {
 
             if isLoadingPreview {
                 ProgressView()
-                    .scaleEffect(0.8)
             } else {
                 Button(action: {
                     Task {
@@ -471,15 +528,17 @@ struct VoicePickerRow: View {
                         .font(.title3)
                 }
                 .buttonStyle(.plain)
-                .disabled(voice.requiresPro && !isPro)
             }
 
             if isSelected {
                 Image(systemName: "checkmark")
                     .foregroundColor(.blue)
+                    .fontWeight(.bold)
+                    .transition(.scale.combined(with: .opacity))
             }
         }
         .contentShape(Rectangle())
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
         .onChange(of: previewService.playingVoiceId) {
             // Update UI when playback state changes
         }

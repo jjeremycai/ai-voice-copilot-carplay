@@ -122,7 +122,9 @@ class SessionLogger {
         let body: [String: Any] = [
             "context": context.rawValue,
             "model": settings.selectedModel.rawValue,
-            "voice": voiceId
+            "voice": voiceId,
+            "tool_calling_enabled": settings.toolCallingEnabled,
+            "web_search_enabled": settings.webSearchEnabled
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

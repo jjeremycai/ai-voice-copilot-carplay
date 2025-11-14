@@ -73,11 +73,30 @@ const normalizeBoolean = (value) => {
   return false;
 };
 
+const normalizeTimestamp = (value) => {
+  if (!value) return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'string') {
+    if (value.includes('T')) return value.endsWith('Z') ? value : value + 'Z';
+    return value.replace(' ', 'T') + 'Z';
+  }
+  return value;
+};
+
+const normalizeTurn = (turn) => {
+  if (!turn) return null;
+  const normalized = { ...turn };
+  normalized.timestamp = normalizeTimestamp(turn.timestamp);
+  return normalized;
+};
+
 const normalizeSession = (session) => {
   if (!session) return null;
   return {
     ...session,
-    logging_enabled_snapshot: normalizeBoolean(session.logging_enabled_snapshot)
+    logging_enabled_snapshot: normalizeBoolean(session.logging_enabled_snapshot),
+    started_at: normalizeTimestamp(session.started_at),
+    ended_at: normalizeTimestamp(session.ended_at)
   };
 };
 
@@ -323,6 +342,15 @@ const authenticateToken = (req, res, next) => {
   if (!token) {
     console.warn('⚠️  No auth token provided');
     return res.status(401).json({ error: 'No token provided' });
+  }
+
+  // Special handling for App Store review test account
+  if (token === 'test_account_token_for_app_store_review') {
+    console.log('✅ App Store review test account authenticated');
+    req.userId = 'user-test-account-001';
+    req.deviceId = 'device_test_account_001';
+    next();
+    return;
   }
 
   // Accept any token (device tokens start with "device_", JWT tokens are longer)
@@ -681,7 +709,7 @@ app.post('/v1/sessions/:id/turns', (req, res) => {
       VALUES (?, ?, ?, ?, ?)
     `);
     stmt.run(turnId, sessionId, turnTimestamp, speaker, text);
-
+    console.log(`📝 Saved turn ${turnId} for session ${sessionId}: speaker=${speaker}, ts=${turnTimestamp}`);
     res.status(201).json({ id: turnId });
   } catch (error) {
     console.error('Log turn error:', error);
@@ -738,20 +766,21 @@ app.get('/v1/sessions/:id', authenticateToken, (req, res) => {
     const turns = db.prepare(`
       SELECT * FROM turns WHERE session_id = ? ORDER BY timestamp ASC
     `).all(sessionId);
+    const normalizedTurns = Array.isArray(turns) ? turns.map(normalizeTurn) : [];
 
     console.log(`📊 Returning session ${sessionId}:`, {
       sessionFields: Object.keys(session),
       summaryStatus: session.summary_status,
       summaryExists: !!summary,
       summaryFields: summary ? Object.keys(summary) : null,
-      turnsCount: turns.length,
-      firstTurnFields: turns[0] ? Object.keys(turns[0]) : null
+      turnsCount: normalizedTurns.length,
+      firstTurnFields: normalizedTurns[0] ? Object.keys(normalizedTurns[0]) : null
     });
 
     res.json({
       session,
       summary: summary || null,
-      turns
+      turns: normalizedTurns
     });
   } catch (error) {
     console.error('Get session error:', error);
@@ -877,7 +906,21 @@ app.post('/v1/auth/login', (req, res) => {
       return res.status(400).json({ error: 'Missing credentials' });
     }
 
-    // Mock auth - in production, validate against real user database
+    // Special handling for App Store review test account
+    if (email === 'jjeremycai@gmail.com' && password === 'helloapplefriend') {
+      // Use a predefined token that maps to our test user
+      const testToken = 'test_account_token_for_app_store_review';
+      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year
+      
+      console.log('✅ App Store review test account login successful');
+      res.json({
+        token: testToken,
+        expires_at: expiresAt
+      });
+      return;
+    }
+
+    // Mock auth for other users - in production, validate against real user database
     const token = Buffer.from(`${email}:${Date.now()}`).toString('base64');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 

@@ -77,9 +77,53 @@ class SubscriptionManager: ObservableObject {
         defer { isLoading = false }
 
         try await AppStore.sync()
-        await refreshEntitlementsAndSync()
-
-        if state.status == .inactive {
+        
+        // Check for active entitlements from App Store first
+        var foundActiveEntitlement = false
+        for await entitlement in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = entitlement,
+                  productIds.contains(transaction.productID) else {
+                continue
+            }
+            
+            foundActiveEntitlement = true
+            // Update local state immediately from App Store
+            let newState = SubscriptionState.from(transaction: transaction)
+            state = newState
+            cache.save(state: newState)
+            
+            // Try to sync with backend, but don't fail if backend is unavailable
+            do {
+                let transactionData = "\(transaction.originalID)-\(transaction.productID)"
+                let verifyResponse = try await iapAPI.verify(transactionJWS: transactionData)
+                print("✅ Backend verification successful: isActive=\(verifyResponse.isActive)")
+                
+                // Update state with backend response if different
+                if verifyResponse.isActive != newState.isActive {
+                    let backendState = SubscriptionState(
+                        status: verifyResponse.isActive ? .active : .expired,
+                        productId: verifyResponse.productId,
+                        originalTransactionId: verifyResponse.originalTransactionId,
+                        expiresAt: verifyResponse.expiresAt,
+                        isInGracePeriod: verifyResponse.isInGrace
+                    )
+                    state = backendState
+                    cache.save(state: backendState)
+                }
+            } catch {
+                // Backend sync failed, but restore should still succeed if we found an entitlement
+                print("⚠️ Backend verification failed (backend may be unavailable): \(error)")
+                // Continue - we've already updated state from App Store
+            }
+            
+            await transaction.finish()
+            break // Take the first active entitlement
+        }
+        
+        // If no active entitlement found, mark as inactive
+        if !foundActiveEntitlement {
+            state = .inactive
+            cache.save(state: state)
             throw SubscriptionError.verificationFailed
         }
     }

@@ -48,6 +48,8 @@
 		7EC82C708D8F430B9BA81C05 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 829B55CB659A4D1EB73FFBE6 /* SubscriptionManager.swift */; };
 		D2A4A4E922E540E6970F7382 /* EntitlementsCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49F0AD0C7FEA4A1C9C5B804C /* EntitlementsCache.swift */; };
 		9606A4FD17E64865A0E2CA25 /* IAPAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E3CCB8B87D473BAEDB0C38 /* IAPAPI.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* HapticFeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* HapticFeedbackService.swift */; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* TimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* TimeFormatter.swift */; };
 		D6AEBBFBAA7C4BA88E7394B9 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17B3090761A4B06AEFC756F /* PaywallView.swift */; };
 /* End PBXBuildFile section */
 
@@ -115,6 +117,8 @@
 		829B55CB659A4D1EB73FFBE6 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		49F0AD0C7FEA4A1C9C5B804C /* EntitlementsCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementsCache.swift; sourceTree = "<group>"; };
 		E7E3CCB8B87D473BAEDB0C38 /* IAPAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IAPAPI.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* HapticFeedbackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedbackService.swift; sourceTree = "<group>"; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* TimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeFormatter.swift; sourceTree = "<group>"; };
 		F17B3090761A4B06AEFC756F /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -169,6 +173,8 @@
 				829B55CB659A4D1EB73FFBE6 /* SubscriptionManager.swift */,
 				49F0AD0C7FEA4A1C9C5B804C /* EntitlementsCache.swift */,
 				E7E3CCB8B87D473BAEDB0C38 /* IAPAPI.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* HapticFeedbackService.swift */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* TimeFormatter.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -450,6 +456,8 @@
 				7EC82C708D8F430B9BA81C05 /* SubscriptionManager.swift in Sources */,
 				D2A4A4E922E540E6970F7382 /* EntitlementsCache.swift in Sources */,
 				9606A4FD17E64865A0E2CA25 /* IAPAPI.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* HapticFeedbackService.swift in Sources */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* TimeFormatter.swift in Sources */,
 				D6AEBBFBAA7C4BA88E7394B9 /* PaywallView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -621,7 +629,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Shaw.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+                CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
 				DEVELOPMENT_TEAM = C4ZTUACCUP;
 				ENABLE_PREVIEWS = YES;
@@ -657,7 +665,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Shaw.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+                CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
 				DEVELOPMENT_TEAM = C4ZTUACCUP;
 				ENABLE_PREVIEWS = YES;
@@ -691,7 +699,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+                CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = C4ZTUACCUP;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
@@ -710,7 +718,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+                CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = C4ZTUACCUP;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
@@ -728,7 +736,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+                CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 8Q3RG3ULSU;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
@@ -745,7 +753,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+                CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 8Q3RG3ULSU;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;

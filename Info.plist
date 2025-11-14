@@ -39,5 +39,9 @@
         <string>audio</string>
         <string>voip</string>
     </array>
+    <key>NSCameraUsageDescription</key>
+    <string>Camera access enables optional video during calls and future visual features.</string>
+    <key>CFBundleVersion</key>
+    <string>2</string>
 </dict>
 </plist>
